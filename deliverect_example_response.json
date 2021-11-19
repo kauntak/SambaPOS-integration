@@ -1,0 +1,118 @@
+{
+  "_items": [
+    {
+      "_id": "5c6d830a0182d6000e******",
+      "_created": "2019-02-20T16:40:44.000000Z",
+      "_updated": "2019-02-20T16:40:52.000000Z",
+      "_etag": "33a7f3f6c7c5f8e82fc97116220b8c23094db14f",
+      "channelOrderId": "******-1527",
+      "channelOrderDisplayId": "1527",
+      "posLocationId": "30458",
+      "location": "5bf02f38c6489f002c******",
+      "channelLink": "5bf02f38c6489f002c******",
+      "status": 1,
+      "statusHistory": [
+        {
+          "_created": "2019-02-20T16:40:42.703000Z",
+          "response": "",
+          "timeStamp": "2019-02-20T16:40:42.703000Z",
+          "status": 4
+        },
+        {
+          "_created": "2019-02-20T16:40:42.726000Z",
+          "response": "",
+          "timeStamp": "2019-02-20T16:40:42.726000Z",
+          "status": 1
+        }
+      ],
+      "channelStatusHistory": [
+        {
+          "_id": "5c6d830c0182d6000e95542a",
+          "_created": "2019-02-20T16:40:44.888000Z",
+          "_updated": "2019-02-20T16:40:44.888000Z",
+          "_etag": "",
+          "orderStatus": 2,
+          "channelStatus": "2019-02-20 16:40:42",
+          "success": true,
+          "response": "{}"
+        }
+      ],
+      "by": "",
+      "orderType": 2,
+      "channel": 2,
+      "pickupTime": "2019-02-20T16:40:42.000000Z",
+      "deliveryIsAsap": false,
+      "courier": " ",
+      "customer": {
+        "name": "Customer name",
+        "companyName": "Deliverect",
+        "phoneNumber": "0123456789",
+        "email": "customer@deliverect.com"
+      },
+      "deliveryAddress": {
+        "street": "",
+        "streetNumber": "",
+        "postalCode": "",
+        "city": "",
+        "extraAddressInfo": ""
+      },
+      "orderIsAlreadyPaid": true,
+      "payment": {
+        "amount": 400,
+        "type": 0
+      },
+      "note": "",
+      "items": [
+        {
+          "plu": "P1",
+          "name": "Green Halo",
+          "price": 1645,
+          "quantity": 2,
+          "productType": 1,
+          "subItems": []
+        },
+        {
+          "_id": "5c6d830a0182d6000e955423",
+          "_created": "2019-02-20T16:40:42.726000Z",
+          "_updated": "2019-02-20T16:40:42.726000Z",
+          "_etag": "",
+          "plu": "P2",
+          "name": "★Chef's Choice Sashimi 12pc",
+          "price": 38.25,
+          "quantity": 1,
+          "productType": 1,
+          "subItems": []
+        }
+      ],
+      "decimalDigits": 2,
+      "numberOfCustomers": 1,
+      "deliveryCost": 0,
+      "serviceCharge": 0,
+      "discountTotal": 0,
+      "posCustomerId": "256706",
+      "account": "5be9c971c6489f0029******",
+      "posReceiptId": "297812",
+      "_links": {
+        "self": {
+          "title": "order",
+          "href": "orders/5c6d830a0182d6000e******"
+        }
+      }
+    }
+  ],
+  "_links": {
+    "parent": {
+      "title": "home",
+      "href": "/"
+    },
+    "self": {
+      "title": "orders",
+      "href": "orders?where={\"account\":\"5be9c971c6489f0029******\",\"location\":\"5bf02f38c6489f002c******\",\"status\":1,\"_updated\": {\"$gte\": \"2019-02-20T00:00:00.000Z\"}}&sort=-_created"
+    }
+  },
+  "_meta": {
+    "page": 1,
+    "max_results": 25,
+    "total": 1
+  }
+}
