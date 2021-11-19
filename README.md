@@ -1,2 +1,2 @@
-# Deliverect_SambaPOS_integration
+# Deliverect SambaPOS Integration
  Integrating Deliverect into SambaPOS
