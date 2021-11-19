@@ -16,6 +16,7 @@
     "http": "0.0.1-security",
     "ngrok": "^4.2.2",
     "querystring": "^0.2.1",
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "tedious": "^14.0.0"
   }
 }

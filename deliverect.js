@@ -3,6 +3,9 @@ const http = require('http');
 const request = require('request');
 const querystring = require('querystring');
 const fs = require('fs');
+const Connection = require('tedious').Connection;
+const Request = require('tedious').Request;
+const TYPES = require('tedious').TYPES;
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -15,15 +18,31 @@ const itemTagName = 'Gloria Name';
 const ticketType = 'Delivery Ticket';
 const departmentName = 'Takeout';
 const userName = process.env.USERNAME;
-const Password = process.env.PASSWORD;
+const password = process.env.PASSWORD;
 const terminalName = 'Server';
 const miscProductName = 'Misc';
-const deliveryFeeCalculation = 'Delivery Service';
-const promotionDiscount = 'Discount';
-const tipCalculation = 'Tip';
 var accessToken = undefined;
 var accessTokenExpires = '';
 
+const user = process.env.USER;
+const pwd = process.env.PWD;
+const database = process.env.DATABASE;
+const databasePort = process.env.DATABASE_PORT;
+const config = {
+	server: server,
+	authentication: {
+		type: 'default',
+		options: {
+			userName: user, 
+			password: pwd
+		}
+	},
+	options: {
+		port: parseInt(`${databasePort?databasePort:1433}`,10),
+		database: database
+	}
+};
+let connection = new Connection(config);
 
 var accountId = '';
 var locationId = '';
@@ -68,9 +87,9 @@ async function start(){
 		}).on('data', chunk => {
 			body += chunk;
 		}).on('end', () => {
-			body = JSON.parse(body);
+			body = JSON.parse(body.replace(/\n/g," "));
 			console.log(body);
-			processPOST(body);
+			processData(body);
 			setLastRead();
 		});
 		res.setHeader('Content-Type', 'application/json');
@@ -86,7 +105,7 @@ function writeToLog(content)
 	if(typeof content == "Object")
 	 	content = JSON.stringify(content);
 	console.log(content);
-	fs.appendFile('C:\\Users\\USER\\Documents\\SambaPOS5\\GloriaTakeout\\log.txt', `${date}: ${content}\r\n`,(err) => {if(err) throw err; console.log(`${content}\r\n`);})
+	fs.appendFile('log.txt', `${date}: ${content}\r\n`,(err) => {if(err) throw err; console.log(`${content}\r\n`);})
 	
 }
 
@@ -94,7 +113,6 @@ function writeToLog(content)
 function makeRequest(reqData){
 	return new Promise((resolve, reject)=>{
 		request(reqData, (err, res, body)=> {
-			
 			if(!err){
 				var returnData = {
 					body : body,
@@ -140,7 +158,7 @@ async function Authorize(callback) {
 	return returnData;
 }
 
-async function processPOST(data) {
+async function processData(data) {
     if (!accessToken) {
         writeToLog('There is no valid access token. Skipping...')
         await Authorize();
@@ -212,11 +230,18 @@ function setLastRead(date){
         });
 }
 function processTickets(tickets) {
-    if (tickets["_meta"].total == 0) return;
-    tickets["_items"].forEach((order) => processOrder(order));
+    if (tickets["_meta"].total == 0 ) return;
+    tickets["_items"].forEach((order) => {
+		if(order.status == 1)
+			processOrder(order);
+		else if(order.status == 100)
+			cancelOrder(order);
+		
+	});
 }
 
 async function processOrder(order) {
+	if(order.status == 100);
     var orderData = {
 		id: order["_id"],
         name: order.customer.name,
@@ -224,17 +249,17 @@ async function processOrder(order) {
 		company: channels[order.channel],
 		channelId: order.channelOrderId,
 		channelDisplayId: order.channelOrderDisplayId,
-		time: new Date(order.pickupTime)
+		time: new Date(order.pickupTime),
+		note: order.note,
+		decimalDigits: order.decimalDigits
     }
+	if(order.note)
+		order.note = order.note.replace(/\\"/g,`\\\\"`);
+	var customer = await createCustomer(orderData);
 	
-    customer = await createCustomer(orderData);
-	var services = order.items
-	   .filter(x => x.type === 'tip' || x.type === 'delivery_fee' || x.type === 'promo_cart')
-		.filter(x => x.name)
-	   .map(x => { return { name: getCalculationName(x.type), amount: Math.abs((x.cart_discount_rate) * 100) || x.price}; }); 
 	loadItems(order.items.map(x => processItem(x)))
 		.then( items => {
-			createTicket(customer, items, order.instructions, order.fulfill_at, services)
+			createTicket(customer, items, order.note, orderData.time)
 				.then( ticketId => {
 					gql('mutation m {postTicketRefreshMessage(id:0){id}}');
 					writeToLog(`Ticket ${ticketId} created...`);
@@ -243,25 +268,14 @@ async function processOrder(order) {
 			
 		});
 	return;
-	var ticketId = await createTicket(customer, items, order.instructions, order.fulfill_at, services);
-	gql('mutation m {postTicketRefreshMessage(id:0){id}}');
-	writeToLog(`Ticket ${ticketId} created...`);
-	lastQryCompleted = true;
 }
 
-function getCalculationName(name) {
-    if (name === 'promo_cart') return promotionDiscount;
-    if (name === 'tip') return tipCalculation;
-    if (name === 'delivery_fee') return deliveryFeeCalculation;
-    return undefined;
+async function cancelOrder(order){
+	return;
 }
 
 function loadItems(items) {
-	if(isTest)
-	{
-		writeToLog("Line 175: loadItems\r\n" + JSON.stringify(items) + "\r\n\r\n");
-	}
-    var script = getLoadItemsScript(items);
+	var script = getLoadItemsScript(items);
     return gql(script)
 		.then(data => {
 			return (items.filter(x => x.type === 'item').map(item => {
@@ -428,14 +442,12 @@ function getAddTicketScript(orders, customerName, newCustomer, instructions, ful
 
 function processItem(item) {
     var result = {
-        id: item.id,
+        id: item.plu.replace(/-/g, ""),
         name: item.name,
-        type: item.type,
         price: item.price,
         quantity: item.quantity,
-        instructions: item.instructions,
-        options: item.options.filter(x => x.type === 'option').map(x => { return { group_name: x.group_name, name: x.name, quantity: x.quantity, price: x.price } }),
-        portions: item.options.filter(x => x.type === 'size').map(x => { return { name: x.name, price: x.price}}),
+        instructions: item.remark.replace(/\"/g, "\\\""),
+        options: item.subItem.map(x => { return { group_name: x.group_name, name: x.name, quantity: x.quantity, price: x.price } }),
 		groupCode: ""
     };
     return result;
