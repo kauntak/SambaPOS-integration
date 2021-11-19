@@ -41,12 +41,12 @@ var channels = {
 };
 
 var Skip = (data) => {
-	this.name = data.orderId.substr(data.orderId.length - 5);
+	this.name = "S-" + data.channelDisplayId;
 	this.subData = `,customData:[{name:"Name",value:"${data.name}"}]`;
 }
 
 var Door = (data) => {
-	this.name = data.name;
+	this.name = "D-" + data.name;
 	this.subData = '';
 }
 
@@ -57,52 +57,36 @@ var lastBody;
 var lastQryCompleted = true;
 
 async function start(){
+	writeToLog("\r\n\r\n\r\n\r\nDeliverect Reader Started");
+	await Authorize();
 	http.createServer((req, res) => {
 		let {headers, method, url} = req;
 		let body = "";
 		let orderId = [];
 		req.on('error', err => {
-			console.error(err);
+			writeToLog(err);
 		}).on('data', chunk => {
 			body += chunk;
 		}).on('end', () => {
 			body = JSON.parse(body);
 			console.log(body);
-
-			//orderId = body["_items"]["_id"];
-			//body = Buffer.concat(body).toString();
+			processPOST(body);
+			setLastRead();
 		});
 		res.setHeader('Content-Type', 'application/json');
 		res.end(`{"posOrderId": "${orderId}"}`)
 	}).listen(8000);
 	return;
-
-	writeToLog("\r\n\r\n\r\n\r\nDeliverect Reader Started");
-	await Authorize();
-    var date = new Date();
-    setLastRead(date)
-        .then( resp => {
-            if(resp) getLastRead()
-                .then(lastRead => {console.log(lastRead)})});
-	//loop();
 }
 
 function writeToLog(content)
 {
-	//var date = new Date();
-	//date = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 19).replace('T', ', ') + ":" + date.getMilliseconds();
+	var date = new Date();
+	date = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 19).replace('T', ', ') + ":" + date.getMilliseconds();
 	if(typeof content == "Object")
 	 	content = JSON.stringify(content);
-//var functionName = arguments.callee.caller.toString();
-	//functionName = '';
-	fs.writeFile('test_data.json', content.toString(), (err) => {if(err) console.log(err);});
-	
 	console.log(content);
-	return;
-	if(isTest)
-		console.log(content);
-	else
-		fs.appendFile('C:\\Users\\USER\\Documents\\SambaPOS5\\GloriaTakeout\\log.txt', `${date}: ${content}\r\n`,(err) => {if(err) throw err; console.log(`${content}\r\n`);})
+	fs.appendFile('C:\\Users\\USER\\Documents\\SambaPOS5\\GloriaTakeout\\log.txt', `${date}: ${content}\r\n`,(err) => {if(err) throw err; console.log(`${content}\r\n`);})
 	
 }
 
@@ -233,15 +217,13 @@ function processTickets(tickets) {
 }
 
 async function processOrder(order) {
-	if(isTest)
-	{
-		writeToLog("Line 140: processOrder\r\n" + JSON.stringify(order) + "\r\n\r\n");
-	}
     var orderData = {
+		id: order["_id"],
         name: order.customer.name,
         phone: order.customer.phoneNumber,
 		company: channels[order.channel],
-		orderId: order.channelOrderId,
+		channelId: order.channelOrderId,
+		channelDisplayId: order.channelOrderDisplayId,
 		time: new Date(order.pickupTime)
     }
 	
@@ -249,7 +231,7 @@ async function processOrder(order) {
 	var services = order.items
 	   .filter(x => x.type === 'tip' || x.type === 'delivery_fee' || x.type === 'promo_cart')
 		.filter(x => x.name)
-	   .map(x => { return { name: getCalculationName(x.type), amount: Math.abs((x.cart_discount_rate) * 100) || x.price}; }) 
+	   .map(x => { return { name: getCalculationName(x.type), amount: Math.abs((x.cart_discount_rate) * 100) || x.price}; }); 
 	loadItems(order.items.map(x => processItem(x)))
 		.then( items => {
 			createTicket(customer, items, order.instructions, order.fulfill_at, services)
