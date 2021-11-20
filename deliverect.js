@@ -1,3 +1,5 @@
+module.exports = {processDeliverect};
+
 const express = require('express');
 const http = require('http');
 const request = require('request');
@@ -9,7 +11,7 @@ const TYPES = require('tedious').TYPES;
 const dotenv = require('dotenv');
 dotenv.config();
 
-const messageServer = process.env.MESSAGE_SERVER;
+const server = process.env.MESSAGE_SERVER;
 const messageServerPort = process.env.MESSAGE_SERVER_PORT;
 const serverKey = process.env.SERVER_KEY;
 const timeout = 2000;
@@ -55,22 +57,20 @@ var testBody = `{"count":1,"orders":[{"instructions":"","coupons":[],"tax_list":
 var testQry = `{"query":"{isEntityExists(type:\"Customers\",name:\"Jennifer Dominie-+14038266041\")}"}`;
 
 var channels = {
-	"1":{entityType:6, constructor: Skip},
-	"0":{entityType:7, constructor: Door}
+	"1":{entityType:"Skip", constructor: Skip},
+	"0":{entityType:"Doordash", constructor: Door}
 };
 
-var Skip = (data) => {
+function Skip(data){
 	this.name = "S-" + data.channelDisplayId;
 	this.subData = `,customData:[{name:"Name",value:"${data.name}"}]`;
 }
 
-var Door = (data) => {
+function Door(data){
 	this.name = "D-" + data.name;
 	this.subData = '';
 }
 
-
-start();
 
 var lastBody;
 var lastQryCompleted = true;
@@ -78,6 +78,9 @@ var lastQryCompleted = true;
 async function start(){
 	writeToLog("\r\n\r\n\r\n\r\nDeliverect Reader Started");
 	await Authorize();
+	//setLastRead();
+
+	//return;
 	http.createServer((req, res) => {
 		let {headers, method, url} = req;
 		let body = "";
@@ -142,7 +145,7 @@ async function Authorize(callback) {
             'Content-Length': contentLength,
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        uri: 'http://' + messageServer + ':' + messageServerPort + '/Token',
+        uri: 'http://' + server + ':' + messageServerPort + '/Token',
         body: formData,
         method: 'POST'
     };
@@ -158,7 +161,7 @@ async function Authorize(callback) {
 	return returnData;
 }
 
-async function processData(data) {
+async function processDeliverect(data) {
     if (!accessToken) {
         writeToLog('There is no valid access token. Skipping...')
         await Authorize();
@@ -193,7 +196,7 @@ async function gql(query, callback) {
             'Accept': 'application/json',
             'Authorization': 'Bearer ' + accessToken
         },
-        uri: 'http://' + messageServer + ':' + messageServerPort + '/api/graphql',
+        uri: 'http://' + server + ':' + messageServerPort + '/api/graphql',
         body: data,
         method: 'POST'
     }
@@ -223,6 +226,8 @@ function getLastRead(){
 }
 
 function setLastRead(date){
+	if(!date)
+		date = new Date();
     var qry = `mutation m{updateGlobalSetting(name:"lastDeliverectCheck", value:"${date.toJSON()}"){value}}`;
     return gql(qry)
         .then( () =>{
@@ -301,8 +306,7 @@ function createTicket(customer, items, instructions, fulfill_at, services) {
 	{
 		writeToLog("Line 214: createTicket Item check\r\n" + JSON.stringify(items, undefined, 2) + "\r\n\r\n");
 	}
-    var newCustomer = isNewCustomer(customer);
-    return gql(getAddTicketScript(items, customer.name, newCustomer, instructions, fulfill_at, services))
+    return gql(getAddTicketScript(items, customer.name, instructions, fulfill_at, services))
 		.then( data => {
 		return (data.addTicket.id);
 		});
@@ -312,13 +316,13 @@ function createTicket(customer, items, instructions, fulfill_at, services) {
 function createCustomer(customer) {
     return gql(getAddCustomerScript(customer))
 		.then( data => {
-			gql(getNewCustomerStateScript(customer));
-			return getCustomer(data.addEntity.name);
+			gql(getNewCustomerStateScript(data.addEntity));
+			return getCustomer(data.addEntity);
 		});
 }
 
-function getCustomer(customerName) {
-    return gql(getCustomerScript(customerName))
+function getCustomer(customer) {
+    return gql(getCustomerScript(customer))
 		.then( data => {
 			return data.getEntity;
 		});
@@ -329,18 +333,22 @@ function getLoadItemsScript(items) {
     return `{${part}}`;
 }
 
+function getCustomerScript(data) {
+    return `{getEntity(type:"${data.type}",name:"${data.name}"){name,customData{name,value},states{stateName,state}}}`;
+}
 
 function getAddCustomerScript(data) {
-	returnData = data.company.constructor(data);
+	returnData = new data.company.constructor(data);
     return `
     mutation m{addEntity(entity:{
         entityType:"${data.company.entityType}",name:"${returnData.name}"${returnData.subData}})
-        {name}
+        {name 
+		type}
     }`;
 }
 
 function getNewCustomerStateScript(customer) {
-    return `mutation m{updateEntityState(entityTypeName:"${customerEntityType}",entityName:"${customer.firstName} ${customer.lastName}-${customer.phone}",state:"Unconfirmed",stateName:"CStatus"){name}}`;
+    return `mutation m{updateEntityState(entityTypeName:"${customer.type}",entityName:"${customer.name}",state:"Unconfirmed",stateName:"CStatus"){name}}`;
 }
 
 function GetOrderTags(order) {
@@ -387,7 +395,7 @@ function GetOrderPrice(order) {
 	return `price:${order.price},`;
 }
 
-function getAddTicketScript(orders, customerName, newCustomer, instructions, fulfill_at, services) {
+function getAddTicketScript(orders, customerName, instructions, fulfill_at, services) {
 	if(isTest)
 	{
 		writeToLog("Line311: getAddTicketScript\r\n" + JSON.stringify(orders, undefined, 2) + "\r\n\r\n");
@@ -419,11 +427,12 @@ function getAddTicketScript(orders, customerName, newCustomer, instructions, ful
 	var time = `${date.getHours()}:${date.getMinutes()<10?"0"+ date.getMinutes():date.getMinutes()}`;
 	
     var result = `
-        mutation m{addTicket(
+        mutation m{adTicket(
             ticket:{type:"${ticketType}",
                 department:"${departmentName}",
                 user:"${userName}",
                 terminal:"${terminalName}",
+				note:"${instructions !== null ? instructions : ''}",
                 ${entityPart}
                 states:[
                     {stateName:"Status",state:"Unconfirmed"}
@@ -441,13 +450,16 @@ function getAddTicketScript(orders, customerName, newCustomer, instructions, ful
 } 
 
 function processItem(item) {
+	console.log(item);
+	if(!item.remark)
+		item.remark = "";
     var result = {
         id: item.plu.replace(/-/g, ""),
         name: item.name,
         price: item.price,
         quantity: item.quantity,
         instructions: item.remark.replace(/\"/g, "\\\""),
-        options: item.subItem.map(x => { return { group_name: x.group_name, name: x.name, quantity: x.quantity, price: x.price } }),
+        options: item.subItems.map(x => { return { group_name: x.group_name, name: x.name, quantity: x.quantity, price: x.price } }),
 		groupCode: ""
     };
     return result;
