@@ -8,6 +8,7 @@ const fs = require('fs');
 const Connection = require('tedious').Connection;
 const Request = require('tedious').Request;
 const TYPES = require('tedious').TYPES;
+const samba = require('./samba');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -17,8 +18,10 @@ const serverKey = process.env.SERVER_KEY;
 const timeout = 2000;
 const customerEntityType = 'Customers';
 const itemTagName = 'Gloria Name';
-const ticketType = 'Delivery Ticket';
-const departmentName = 'Takeout';
+const deliveryTicketType = 'Delivery Ticket';
+const takeoutTicketType =  'Gloria Ticket';
+const deliveryDepartmentName = 'Delivery';
+const takeoutDepartmentName = 'Takeout';
 const userName = process.env.USERNAME;
 const password = process.env.PASSWORD;
 const terminalName = 'Server';
@@ -77,7 +80,7 @@ var lastQryCompleted = true;
 
 async function start(){
 	writeToLog("\r\n\r\n\r\n\r\nDeliverect Reader Started");
-	await Authorize();
+	await samba.Authorize();
 	//setLastRead();
 
 	//return;
@@ -99,17 +102,6 @@ async function start(){
 		res.end(`{"posOrderId": "${orderId}"}`)
 	}).listen(8000);
 	return;
-}
-
-function writeToLog(content)
-{
-	var date = new Date();
-	date = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 19).replace('T', ', ') + ":" + date.getMilliseconds();
-	if(typeof content == "Object")
-	 	content = JSON.stringify(content);
-	console.log(content);
-	fs.appendFile('log.txt', `${date}: ${content}\r\n`,(err) => {if(err) throw err; console.log(`${content}\r\n`);})
-	
 }
 
 
@@ -134,45 +126,8 @@ function makeRequest(reqData){
 }
 
 
-async function Authorize(callback) {
-    accessToken = undefined;
-	writeToLog("authorizing");
-    var form = { grant_type: 'client_credentials', client_secret: serverKey, client_id: 'gloria' };
-    var formData = querystring.stringify(form);
-    var contentLength = formData.length;
-    var reqData = {
-        headers: {
-            'Content-Length': contentLength,
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        uri: 'http://' + server + ':' + messageServerPort + '/Token',
-        body: formData,
-        method: 'POST'
-    };
-	var returnData = await makeRequest(reqData);
-	if(returnData.statusCode == 400)
-		writeToLog(returnData.body);
-	else{
-		var result = JSON.parse(returnData.body);
-		accessToken = result.access_token;
-		accessTokenExpires = new Date(result['.expires']);
-		writeToLog("Access Token Authorized.");
-	}
-	return returnData;
-}
-
 async function processDeliverect(data) {
-    if (!accessToken) {
-        writeToLog('There is no valid access token. Skipping...')
-        await Authorize();
-		if(!lastQryCompleted)
-			processTickets(lastBody);
-    }
-    else if (accessTokenExpires < new Date()) {
-        writeToLog('Access Token Expired. Reauthenticating...');
-        await Authorize();
-    }
-    else {
+   
         processTickets(data);
 		
 		//var qry = `getProduct(name: "Sappoo") {name}`;

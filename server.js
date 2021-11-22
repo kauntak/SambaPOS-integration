@@ -1,16 +1,26 @@
+module.exports = {start};
+
+
 const http = require('http');
 const request = require('request');
 const querystring = require('querystring');
 const fs = require('fs');
 const deliverect = require('./deliverect');
+const samba = require('./samba');
 
-start();
+const dotenv = require('dotenv');
+dotenv.config();
+const listenPort = process.env.LISTEN_PORT;
+
+
+//start();
 
 var lastBody;
 var lastQryCompleted = true;
 
 async function start(){
 	writeToLog("\r\n\r\n\r\n\r\nServer Started");
+	//samba.Authorize();
 	http.createServer((req, res) => {
 		let {headers, method, url} = req;
 		let body = "";
@@ -41,7 +51,7 @@ async function start(){
                 writeToLog(body);
         }
 		res.end();
-	}).listen(8000);
+	}).listen(listenPort);
 	return;
 }
 
