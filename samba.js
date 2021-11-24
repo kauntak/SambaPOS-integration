@@ -1,57 +1,38 @@
-module.exports = {writeToLog,Authorize,gql,getLastRead, setLastRead,getOpenTicekts,openTerminal,closeTerminal,payTicket,loadCustomer,loadItems,createTicket};
+module.exports = {Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket};
 
-const express = require('express');
-const http = require('http');
 const request = require('request');
 const querystring = require('querystring');
-const { resolve } = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
 dotenv.config();
 
+const log = require('./log');
 const Server = require('./Server');
 const Webhook = require('./Webhook');
 const Clover = require('./Clover');
+const Gloria = require('./Gloria');
+const Deliverect = require('./Deliverect');
 
 const server = process.env.MESSAGE_SERVER;
 const messageServerPort = process.env.MESSAGE_SERVER_PORT;
 const serverKey = process.env.SERVER_KEY;
-const timeout = 2000;
 const customerEntityType = 'Customers';
-const itemTagName = 'Gloria Name';
 const deliveryTicketType = 'Delivery Ticket';
 const takeoutTicketType =  'Gloria Ticket';
-const deliveryDepartmentName = 'Delivery';
-const takeoutDepartmentName = 'Takeout';
+
 const userName = process.env.USERNAME;
 const password = process.env.PASSWORD;
 const terminalName = 'Server';
 const miscProductName = 'Misc';
+
 var accessToken = undefined;
 var accessTokenExpires = '';
 
 
 const isTest = false;
 
-start();
-
-async function start(){
-    console.log("====================================================================================");
-    Server.start();
-    Webhook.start();
-    await Authorize();
-    //let a = await gql(getOpenTicekts());
-    //console.log(JSON.stringify(a,undefined,2));
-}
-
-
 function writeToLog(content){
-	var date = new Date();
-	date = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 19).replace('T', ', ') + ":" + date.getMilliseconds();
-	if(typeof content == "Object")
-	 	content = JSON.stringify(content);
-	console.log(content);
-	fs.appendFile('log.txt', `${date}: ${content}\r\n`,(err) => {if(err) throw err; console.log(`${content}\r\n`);})
+    log.write("Samba",content);
 }
 
 async function Authorize() {
@@ -97,9 +78,8 @@ async function gql(query) {
         writeToLog('Access Token Expired. Reauthenticating...');
         await Authorize();
     }
-	
     let data = JSON.stringify({ query: query });
-   let reqData = {
+    let reqData = {
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
@@ -110,41 +90,35 @@ async function gql(query) {
         method: 'POST'
     }
     return new Promise((resolve, reject) =>{
-        request({
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': 'Bearer ' + accessToken
-            },
-            uri: 'http://' + server + ':' + messageServerPort + '/api/graphql',
-            body: data,
-            method: 'POST'
-        }, async function (err, res, body) {
+        request(reqData, async function (err, res, body) {
             if (res.statusCode === 401) {
                 writeToLog('Should Authorize...');
                 await Authorize();
                 resolve(await gql(query));
             }
             else {
-                let res = JSON.parse(body).data;
-                writeToLog("GQL Result: " + JSON.stringify(res, undefined, 2));
-                resolve(res);
+                let res = JSON.parse(body);
+                writeToLog("GQL QUERY : " + JSON.stringify(query, undefined,2));
+                writeToLog("GQL Result: " + JSON.stringify(res.data, undefined, 2));
+                writeToLog("GQL ERROR:  " + JSON.stringify(res.errors));
+                resolve(res.data);
             }
         });	
     });
 }
 
-function getLastRead(){
+function getCloverLastRead(delay){
     let qry = `{getGlobalSetting(name:"lastCloverCheck"){value}}`;
     return gql(qry)
         .then( resp =>{
 			let date = new Date(resp.getGlobalSetting.value);
-			date.setMinutes(date.getMinutes() - (10 + (timeout / 60000)));
+            if(delay)
+			    date.setMinutes(date.getMinutes() - delay);
             return date;
         })
 }
 
-function setLastRead(date){
+function setCloverLastRead(date){
 	if(!date)
 		date = new Date();
     let qry = `mutation m{updateGlobalSetting(name:"lastCloverCheck", value:"${date.toJSON()}"){value}}`;
@@ -154,11 +128,47 @@ function setLastRead(date){
         });
 }
 
-function getOpenTicekts(){
+function getDeliverectLastRead(delay){
+    let qry = `{getGlobalSetting(name:"lastDeliverectCheck"){value}}`;
+    return gql(qry)
+        .then( resp =>{
+			let date = new Date(resp.getGlobalSetting.value);
+            if(delay)
+			    date.setMinutes(date.getMinutes() - delay);
+            return date;
+        })
+}
+
+function setDeliverectLastRead(date){
+	if(!date)
+		date = new Date();
+    let qry = `mutation m{updateGlobalSetting(name:"lastDeliverectCheck", value:"${date.toJSON()}"){value}}`;
+    return gql(qry)
+        .then( () =>{
+            return true;
+        });
+}
+
+function getOpenTakeoutTickets(){
+    return getOpenTickets().then(tickets => {
+        return tickets.filter(ticket =>
+            ticket.type != 'Delivery Ticket');
+        });
+}
+
+
+function getOpenDeliveryTickets(){
+    return getOpenTickets().then(tickets => {
+        return tickets.filter(ticket =>
+            ticket.type == 'Delivery Ticket');
+        });
+}
+
+function getOpenTickets(){
 	return gql(getOpenTicketsScript())
 		.then(tickets =>{
 			tickets = tickets.getTickets.filter(ticket =>
-				ticket.type != 'Delivery Ticket' && ticket.states.filter(state => state.state == "Unpaid").length != 0
+				ticket.states.filter(state => state.state == "Unpaid").length != 0
 			).map(ticket => {
 				ticket.states = ticket.states.filter(state => state.state == "Unpaid");
 				ticket.tags = ticket.tags.flatMap(tag => {
@@ -189,14 +199,13 @@ function openTerminal(){
 		.then(data => data.registerTerminal);
 }
 
-function payTicket(terminalId, ticketId, amount){
-	return gql(getLoadTicketScript(terminalId,ticketId))
-		.then( () => {
-			return gql(getPayTicketScript(terminalId, amount))
-				.then( () => {
-					return gql(getCloseTicketScript(terminalId))
-				});
-		});
+async function payTicket(terminalId, ticketId, amount){
+	await gql(getLoadTicketScript(terminalId,ticketId));
+    await gql(getPayTicketScript(terminalId, amount));
+}
+
+function closeTicket(terminalId){
+    return gql(getCloseTicketScript(terminalId));
 }
 
 function payTickets(list){
@@ -211,19 +220,7 @@ function closeTerminal(terminalId){
 }
 
 function getOpenTicketsScript(){
-	return `{getTickets(isClosed: false) {
-    id
-    type
-    remainingAmount
-    states {
-      state
-      stateName
-    }
-	tags {
-      tag
-      tagName
-    }
-	}}`;
+	return `{getTickets(isClosed: false) {id, type, remainingAmount, states{state, stateName}, tags{tag, tagName}, entities{name}}}`;
 }
 
 function getOpenTerminalScript(){
@@ -240,7 +237,7 @@ function getPayTicketScript(terminalId, amount){
 }
 
 function getCloseTicketScript(terminalId){
-	return `mutation close {closeTerminalTicket(terminalId:"${terminalId}"){ ticketId} }`;
+	return `mutation close {closeTerminalTicket(terminalId:"${terminalId}") }`;
 }
 
 function getPostBroadcastScript(list){
@@ -249,16 +246,12 @@ function getPostBroadcastScript(list){
 }
 
 
-function closeTerminalScript(terminalId){
+function getCloseTerminalScript(terminalId){
 	return `mutation unregister {unregisterTerminal(terminalId: "${terminalId}")}`;
 }
 
 
 function loadItems(items) {
-	if(isTest)
-	{
-		writeToLog("Line 175: loadItems\r\n" + JSON.stringify(items) + "\r\n\r\n");
-	}
     var script = getLoadItemsScript(items);
     return gql(script)
 		.then(data => {
@@ -278,20 +271,9 @@ function loadItems(items) {
 			}));
 		});
 }
-loadItems,createTicket,
-function isNewCustomer(customer) {
-    if (customer.states && customer.states.find(x => x.stateName === 'CStatus')) {
-        return customer.states.find(x => x.stateName === 'CStatus').state === 'Unconfirmed';
-    }
-    return false;
-}
 
-function createTicket(customer, items, instructions, fulfill_at, services) {
-	if(isTest)
-	{
-		writeToLog("Line 214: createTicket Item check\r\n" + JSON.stringify(items, undefined, 2) + "\r\n\r\n");
-	}
-    return gql(getAddTicketScript(items, customer.name, instructions, fulfill_at, services))
+function createTicket(customer, items, instructions, fulfill_at, services, type) {
+    return gql(getAddTicketScript(items, customer.name, instructions, fulfill_at, services, type))
 		.then( data => {
             var ticketId = data.addTicket.id;
             gql('mutation m {postTicketRefreshMessage(id:0){id}}');
@@ -401,10 +383,6 @@ function GetOrderPrice(order) {
 }
 
 function getAddTicketScript(orders, customerName, instructions, fulfill_at, services, type) {
-	if(isTest)
-	{
-		writeToLog("Line311: getAddTicketScript\r\n" + JSON.stringify(orders, undefined, 2) + "\r\n\r\n");
-	}
     var orderLines = orders.filter(x => x.groupCode != 'Temporary open hours!!!!').map(order => {
         return `{
             name:"${order.sambaName ? order.sambaName : order.name}",

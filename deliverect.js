@@ -1,53 +1,19 @@
 module.exports = {processDeliverect};
 
-const express = require('express');
 const http = require('http');
-const request = require('request');
-const querystring = require('querystring');
-const fs = require('fs');
-const Connection = require('tedious').Connection;
-const Request = require('tedious').Request;
-const TYPES = require('tedious').TYPES;
-const samba = require('./samba');
+const samba = require('./Samba');
+const sql = require('./sql');
+const log = require('./log');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const server = process.env.MESSAGE_SERVER;
-const messageServerPort = process.env.MESSAGE_SERVER_PORT;
-const serverKey = process.env.SERVER_KEY;
-const timeout = 2000;
 const customerEntityType = 'Customers';
-const itemTagName = 'Gloria Name';
-const deliveryTicketType = 'Delivery Ticket';
-const takeoutTicketType =  'Gloria Ticket';
-const deliveryDepartmentName = 'Delivery';
-const takeoutDepartmentName = 'Takeout';
 const userName = process.env.USERNAME;
 const password = process.env.PASSWORD;
 const terminalName = 'Server';
 const miscProductName = 'Misc';
 var accessToken = undefined;
 var accessTokenExpires = '';
-
-const user = process.env.USER;
-const pwd = process.env.PWD;
-const database = process.env.DATABASE;
-const databasePort = process.env.DATABASE_PORT;
-const config = {
-	server: server,
-	authentication: {
-		type: 'default',
-		options: {
-			userName: user, 
-			password: pwd
-		}
-	},
-	options: {
-		port: parseInt(`${databasePort?databasePort:1433}`,10),
-		database: database
-	}
-};
-let connection = new Connection(config);
 
 var accountId = '';
 var locationId = '';
@@ -78,130 +44,36 @@ function Door(data){
 var lastBody;
 var lastQryCompleted = true;
 
-async function start(){
-	writeToLog("\r\n\r\n\r\n\r\nDeliverect Reader Started");
-	await samba.Authorize();
-	//setLastRead();
 
+function writeToLog(content){
+    log.write("Deliverect", content);
+}
+
+
+async function start(testing){
+    if(testing)
+        isTest = true;
+	writeToLog("Deliverect Reader Started.\r\n\r\n\r\n");
+	lastReadTime = await samba.getDeliverectLastRead();
+	
 	//return;
-	http.createServer((req, res) => {
-		let {headers, method, url} = req;
-		let body = "";
-		let orderId = [];
-		req.on('error', err => {
-			writeToLog(err);
-		}).on('data', chunk => {
-			body += chunk;
-		}).on('end', () => {
-			body = JSON.parse(body.replace(/\n/g," "));
-			console.log(body);
-			processData(body);
-			setLastRead();
-		});
-		res.setHeader('Content-Type', 'application/json');
-		res.end(`{"posOrderId": "${orderId}"}`)
-	}).listen(8000);
 	return;
 }
 
-
-function makeRequest(reqData){
-	return new Promise((resolve, reject)=>{
-		request(reqData, (err, res, body)=> {
-			if(!err){
-				var returnData = {
-					body : body,
-					statusCode : res.statusCode
-				}
-				resolve(returnData);
-			}
-			else{
-				reject(err);
-			}
-		})
-	})
-	.catch((err) => {
-		writeToLog("ERROR: " + err.message);
-	});
-}
-
-
-async function processDeliverect(data) {
-   
-        processTickets(data);
-		
-		//var qry = `getProduct(name: "Sappoo") {name}`;
-		//gql(qry,() =>{return});
-    }
-}
-
-async function gql(query, callback) {
-	if (!accessToken) {
-        writeToLog('Valid access Token is needed to execute GQL calls.')
-        return;
-    }
-	
-    var data = JSON.stringify({ query: query });
-	var returnData;
-	if(!isTest)
-		writeToLog("GQL Query: " + data);
-   var reqData = {
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + accessToken
-        },
-        uri: 'http://' + server + ':' + messageServerPort + '/api/graphql',
-        body: data,
-        method: 'POST'
-    }
-	var returnData = await makeRequest(reqData);
-	//console.log("returnData: ",returnData);
-	if(returnData.statusCode === 401){
-		writeToLog('Should Authorize...');
-		await Authorize();
-		returnData = await gql(query);
-	}
-	else{
-		var data = JSON.parse(returnData.body).data;
-		if(isTest)
-			writeToLog(`GQL Query: ${query}\r\nResponse:\r\n${returnData.body}\r\n`);
-		returnData = data;
-	}
-	return returnData;
-	
-}
-
-function getLastRead(){
-    var qry = `{getGlobalSetting(name:"lastDeliverectCheck"){value}}`;
-    return gql(qry)
-        .then( resp =>{
-            return new Date(resp.getGlobalSetting.value);
-        })
-}
-
-function setLastRead(date){
-	if(!date)
-		date = new Date();
-    var qry = `mutation m{updateGlobalSetting(name:"lastDeliverectCheck", value:"${date.toJSON()}"){value}}`;
-    return gql(qry)
-        .then( () =>{
-            return true;
-        });
-}
-function processTickets(tickets) {
-    if (tickets["_meta"].total == 0 ) return;
+function processDeliverect(data) {
+	if (tickets["_meta"].total == 0 ) return;
     tickets["_items"].forEach((order) => {
-		if(order.status == 1)
+		if(order.status == 20)
 			processOrder(order);
 		else if(order.status == 100)
 			cancelOrder(order);
+		else if(order.status == 90)
+			finalizeOrder(order)
 		
 	});
 }
 
 async function processOrder(order) {
-	if(order.status == 100);
     var orderData = {
 		id: order["_id"],
         name: order.customer.name,
@@ -213,6 +85,7 @@ async function processOrder(order) {
 		note: order.note,
 		decimalDigits: order.decimalDigits
     }
+	orderData.entity = channels[order.channel].constructor(orderData);
 	if(order.note)
 		order.note = order.note.replace(/\\"/g,`\\\\"`);
 	var customer = await createCustomer(orderData);
@@ -231,6 +104,10 @@ async function processOrder(order) {
 }
 
 async function cancelOrder(order){
+	return;
+}
+
+function finalizeOrder(order){
 	return;
 }
 
@@ -271,7 +148,10 @@ function createTicket(customer, items, instructions, fulfill_at, services) {
 function createCustomer(customer) {
     return gql(getAddCustomerScript(customer))
 		.then( data => {
-			gql(getNewCustomerStateScript(data.addEntity));
+			if(!data)
+				data = {addEntity:{name:customer.entity.name, type:customer.company.entityType}};
+			else
+				gql(getNewCustomerStateScript(data.addEntity));
 			return getCustomer(data.addEntity);
 		});
 }
@@ -293,10 +173,9 @@ function getCustomerScript(data) {
 }
 
 function getAddCustomerScript(data) {
-	returnData = new data.company.constructor(data);
     return `
     mutation m{addEntity(entity:{
-        entityType:"${data.company.entityType}",name:"${returnData.name}"${returnData.subData}})
+        entityType:"${data.company.entityType}",name:"${data.entity.name}"${data.entity.subData}})
         {name 
 		type}
     }`;
@@ -351,11 +230,6 @@ function GetOrderPrice(order) {
 }
 
 function getAddTicketScript(orders, customerName, instructions, fulfill_at, services) {
-	if(isTest)
-	{
-		writeToLog("Line311: getAddTicketScript\r\n" + JSON.stringify(orders, undefined, 2) + "\r\n\r\n");
-	}
-	console.log(fulfill_at);
     var orderLines = orders.filter(x => x.groupCode != 'Temporary open hours!!!!').map(order => {
         return `{
             name:"${order.sambaName ? order.sambaName : order.name}",
@@ -368,7 +242,6 @@ function getAddTicketScript(orders, customerName, instructions, fulfill_at, serv
                 {stateName:"Status",state:"Submitted"}]
         }`;
     });
-
     var entityPart = customerName
         ? `entities:[{entityType:"${customerEntityType}",name:"${customerName}"}],`:'';
     var calculationsPart = services
@@ -381,7 +254,7 @@ function getAddTicketScript(orders, customerName, instructions, fulfill_at, serv
 	
 	var time = `${date.getHours()}:${date.getMinutes()<10?"0"+ date.getMinutes():date.getMinutes()}`;
 	
-    var result = `
+    return `
         mutation m{adTicket(
             ticket:{type:"${ticketType}",
                 department:"${departmentName}",
@@ -396,12 +269,6 @@ function getAddTicketScript(orders, customerName, instructions, fulfill_at, serv
                 ${calculationsPart}
                 orders:[${orderLines.join()}]
             }){id}}`;
-	createTicketQry = result;
-	if(isTest)
-	{
-		writeToLog("Line 348: getAddTicketScript:\r\n" + result + "\r\n\r\n");
-	}
-    return result;
 } 
 
 function processItem(item) {

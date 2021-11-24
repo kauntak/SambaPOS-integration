@@ -2,7 +2,7 @@ module.exports = {start};
 
 const ngrok = require('ngrok');
 const dotenv = require('dotenv');
-const samba = require('./samba');
+const log = require('./log');
 dotenv.config();
 
 const ngrok_options = {
@@ -13,10 +13,16 @@ const ngrok_options = {
 };
 //start();
 
+
+function writeToLog(content){
+    log.write("Webhook", content);
+}
+
+
 async function start(){
     const url = await ngrok.connect(ngrok_options);
 	const api = ngrok.getApi();
 	const hookrequests = api.listRequests();
-	samba.writeToLog("Webhook Server Started.");
+	writeToLog("Webhook Server Started.\r\n\r\n\r\n");
 	return;
 }

@@ -2,25 +2,21 @@ module.exports = {start};
 
 
 const http = require('http');
-const request = require('request');
-const querystring = require('querystring');
-const fs = require('fs');
-const deliverect = require('./deliverect');
-const samba = require('./samba');
+const deliverect = require('./Deliverect');
+const samba = require('./Samba');
+const log = require('./log');
 
 const dotenv = require('dotenv');
 dotenv.config();
 const listenPort = process.env.LISTEN_PORT;
 
 
-//start();
-
-var lastBody;
-var lastQryCompleted = true;
+function writeToLog(content){
+    log.write("Server", content);
+}
 
 async function start(){
-	writeToLog("\r\n\r\n\r\n\r\nServer Started");
-	//samba.Authorize();
+	writeToLog("Server Started.\r\n\r\n\r\n");
 	http.createServer((req, res) => {
 		let {headers, method, url} = req;
 		let body = "";
@@ -53,15 +49,4 @@ async function start(){
 		res.end();
 	}).listen(listenPort);
 	return;
-}
-
-function writeToLog(content)
-{
-	var date = new Date();
-	date = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 19).replace('T', ', ') + ":" + date.getMilliseconds();
-	if(typeof content == "Object")
-	 	content = JSON.stringify(content);
-	console.log(content);
-	fs.appendFile('log.txt', `${date}: ${content}\r\n`,(err) => {if(err) throw err; console.log(`${content}\r\n`);})
-	
 }
