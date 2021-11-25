@@ -69,10 +69,11 @@ async function start(testing){
 async function processDeliverect(data) {
 	if (data["_meta"].total == 0 ) return;
 	let insertData = [];
-    data["_items"].forEach((order) => {
-		if(order.status == 20)
-			insertData.push(await processOrder(order));
-		else if(order.status == 100)
+    data["_items"].forEach(async (order) => {
+		if(order.status == 20){
+			let resData = await processOrder(order);
+			insertData.push(resData);
+		}else if(order.status == 100)
 			cancelOrder(order);
 		else if(order.status == 90)
 			finalizeOrder(order)
