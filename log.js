@@ -8,7 +8,7 @@ function write(source, content){
 	date = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 19).replace('T', ', ') + ":" + date.getMilliseconds();
 	if(typeof content == "Object")
 	 	content = JSON.stringify(content);
-    //console.log(content);
+    console.log(content);
     if(!fs.existsSync('./log'))
 		fs.mkdir('./log', err=> {if(err) console.log(err)});
 	fs.appendFile(`log/log_${source}.txt`, `${date}: ${content}\r\n`,(err) => {
