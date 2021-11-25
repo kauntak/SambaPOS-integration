@@ -331,7 +331,7 @@ function getIsEntityExistsScript(customer) {
 function getAddCustomerScript(customer) {
     return `
     mutation m{addEntity(entity:{
-        entityType:"${customer.type}",name:"${customer.name}",customData:${customer.customData}})
+        entityType:"${customer.type}",name:"${customer.name}"${customer.customData}})
         {name}
     }`;
 }
