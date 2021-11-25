@@ -78,27 +78,11 @@ async function processOrder(order) {
 	orderData.entity = orderData.company.constructor(orderData);
 	if(order.note)
 		order.note = order.note.replace(/\\"/g,`\\\\"`);
-	var customer = await createCustomer(orderData.entity);
+	var customer = await loadCustomer(orderData.entity);
 	
-	let items = await samba.loadItems(order.items.map(x => processItem(x)));
-    orderData.ticketId = await samba.createTicket(sambaCustomer, items, order.instructions, order.fulfill_at, services, ticketType);
-    lastQryCompleted = true;
-	
+	let items = await samba.loadItems(order.items.map(x => processItem(x, orderData.decimalDigits)));
+    orderData.ticketId = await samba.createTicket(customer, items, order.instructions, order.fulfill_at, services, ticketType);
 	return orderData;
-
-
-
-	loadItems(order.items.map(x => processItem(x)))
-		.then( items => {
-			createTicket(customer, items, order.note, orderData.time)
-				.then( ticketId => {
-					gql('mutation m {postTicketRefreshMessage(id:0){id}}');
-					writeToLog(`Ticket ${ticketId} created...`);
-					lastQryCompleted = true;
-				});
-			
-		});
-	return;
 }
 //TODO: Cancel order, void ticket/orders from SambaPOS, update Kitchen Display
 async function cancelOrder(order){
@@ -129,17 +113,21 @@ function processOrderData(order){
     };
 }
 //will process items into a SambaPOS readable item.
-function processItem(item) {
+function processItem(item, digits) {
+	if(!digits)
+		digits = 0;
 	console.log(item);
 	if(!item.remark)
 		item.remark = "";
     var result = {
         id: item.plu.replace(/-/g, ""),
         name: item.name,
-        price: item.price,
+        price: item.price / Math.pow(10, digits),
         quantity: item.quantity,
         instructions: item.remark.replace(/\"/g, "\\\""),
-        options: item.subItems.map(x => { return { group_name: x.group_name, name: x.name, quantity: x.quantity, price: x.price } }),
+        options: item.subItems.map(x => { 
+			let values = x.name.split("/");
+			return { group_name: values[0], name: values[1], quantity: x.quantity, price: x.price }; }),
 		groupCode: ""
     };
     return result;
