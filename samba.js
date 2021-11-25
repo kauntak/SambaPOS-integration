@@ -17,8 +17,6 @@ const server = process.env.MESSAGE_SERVER;
 const messageServerPort = process.env.MESSAGE_SERVER_PORT;
 const serverKey = process.env.SERVER_KEY;
 const customerEntityType = 'Customers';
-const deliveryTicketType = 'Delivery Ticket';
-const takeoutTicketType =  'Gloria Ticket';
 
 const userName = process.env.USERNAME;
 const password = process.env.PASSWORD;
@@ -31,10 +29,13 @@ var accessTokenExpires = '';
 
 const isTest = false;
 
+//Log for all SambaRequests
 function writeToLog(content){
     log.write("Samba",content);
 }
 
+
+//Retreice auth token and valid date from Samba.
 async function Authorize() {
     accessToken = undefined;
 	writeToLog("Authorizing.");
@@ -70,6 +71,7 @@ async function Authorize() {
     }).catch(err => {writeToLog("Request Data: " + JSON.stringify(reqData, undefined, 2));});
 }
 
+//GraphiQL query
 async function gql(query) {
 	if (!accessToken) {
         writeToLog('Valid access Token is needed to execute GQL calls.')
@@ -107,6 +109,7 @@ async function gql(query) {
     });
 }
 
+//Retreiving value for when clover was last polled
 function getCloverLastRead(delay){
     let qry = `{getGlobalSetting(name:"lastCloverCheck"){value}}`;
     return gql(qry)
@@ -118,6 +121,7 @@ function getCloverLastRead(delay){
         })
 }
 
+//Setting value for when clover was last polled
 function setCloverLastRead(date){
 	if(!date)
 		date = new Date();
@@ -127,7 +131,7 @@ function setCloverLastRead(date){
             return true;
         });
 }
-
+//Retreiving value for when deliverect was last polled
 function getDeliverectLastRead(delay){
     let qry = `{getGlobalSetting(name:"lastDeliverectCheck"){value}}`;
     return gql(qry)
@@ -139,6 +143,7 @@ function getDeliverectLastRead(delay){
         })
 }
 
+//Setting value for when deliverect was last polled
 function setDeliverectLastRead(date){
 	if(!date)
 		date = new Date();
@@ -149,6 +154,7 @@ function setDeliverectLastRead(date){
         });
 }
 
+//Retreiving all currently all open takeout tickets
 function getOpenTakeoutTickets(){
     return getOpenTickets().then(tickets => {
         return tickets.filter(ticket =>
@@ -156,7 +162,7 @@ function getOpenTakeoutTickets(){
         });
 }
 
-
+//Retreiving all currently open delivery tickets
 function getOpenDeliveryTickets(){
     return getOpenTickets().then(tickets => {
         return tickets.filter(ticket =>
@@ -164,6 +170,7 @@ function getOpenDeliveryTickets(){
         });
 }
 
+//retreiving all currently open tickets.
 function getOpenTickets(){
 	return gql(getOpenTicketsScript())
 		.then(tickets =>{
@@ -194,27 +201,28 @@ function getOpenTickets(){
 		});
 }
 
+///register a gql terminal
 function openTerminal(){
 	return gql(getOpenTerminalScript())
 		.then(data => data.registerTerminal);
 }
 
-async function payTicket(terminalId, ticketId, amount){
+//load a ticket, make payments, and close ticket.
+async function payTicket(terminalId, ticketId, amount, paymentType){
 	await gql(getLoadTicketScript(terminalId,ticketId));
-    await gql(getPayTicketScript(terminalId, amount));
+    if(!amount instanceof Array)
+        amount = [amount];
+    for(let i in amount)
+        await gql(getPayTicketScript(terminalId, amount, paymentType));
+    await closeTicket(terminalId);
 }
 
+//close ticket
 function closeTicket(terminalId){
     return gql(getCloseTicketScript(terminalId));
 }
 
-function payTickets(list){
-	return gql(getPostBroadcastScript(list))
-		.then( msg => msg);
-}
-
-
-
+//unregister gql terminal
 function closeTerminal(terminalId){
 	return gql(getCloseTerminalScript(terminalId));
 }
@@ -232,8 +240,8 @@ function getLoadTicketScript(terminalId, ticketId){
 	
 }
 
-function getPayTicketScript(terminalId, amount){
-	return `mutation pay {payTerminalTicket(terminalId:"${terminalId}", paymentTypeName:"Credit Card", amount:${amount}){ ticketId} }`;
+function getPayTicketScript(terminalId, amount, paymentType){
+	return `mutation pay {payTerminalTicket(terminalId:"${terminalId}", paymentTypeName:"${paymentType}", amount:${amount}){ ticketId} }`;
 }
 
 function getCloseTicketScript(terminalId){
@@ -250,7 +258,7 @@ function getCloseTerminalScript(terminalId){
 	return `mutation unregister {unregisterTerminal(terminalId: "${terminalId}")}`;
 }
 
-
+//load items from SambaPOS and return an item object.
 function loadItems(items) {
     var script = getLoadItemsScript(items);
     return gql(script)
@@ -271,7 +279,7 @@ function loadItems(items) {
 			}));
 		});
 }
-
+//creating a SambaPOS ticket from customer, items, ticket note, fulfilment time, service fees, and ticekt type
 function createTicket(customer, items, instructions, fulfill_at, services, type) {
     return gql(getAddTicketScript(items, customer.name, instructions, fulfill_at, services, type))
 		.then( data => {
@@ -282,6 +290,7 @@ function createTicket(customer, items, instructions, fulfill_at, services, type)
 		});
 }
 
+//load customer from SambaPOS
 function loadCustomer(customer) {
 	return gql( getIsEntityExistsScript(customer) )
 		.then( data => {
@@ -292,6 +301,7 @@ function loadCustomer(customer) {
 		});
 }
 
+//create a new customer on SambaPOS
 function createCustomer(customer) {
     return gql(getAddCustomerScript(customer))
 		.then( data => {
@@ -300,6 +310,7 @@ function createCustomer(customer) {
 		});
 }
 
+//retreive a customer from SambaPOS
 function getCustomer(customerName) {
     return gql(getCustomerScript(customerName))
 		.then( data => {
@@ -307,6 +318,7 @@ function getCustomer(customerName) {
 		});
 }
 
+//script for retreiving items from SambaPOS
 function getLoadItemsScript(items) {
     var part = items.map(item => `i${item.id}: getProduct(name:"${item.name}"){name, groupCode} `);
     return `{${part}}`;
@@ -410,7 +422,7 @@ function getAddTicketScript(orders, customerName, instructions, fulfill_at, serv
 	
     return `
         mutation m{addTicket(
-            ticket:{type:"${type=='Gloria'?takeoutTicketType:deliveryTicketType}",
+            ticket:{type:"${type}",
                 department:"${departmentName}",
                 user:"${userName}",
                 terminal:"${terminalName}",

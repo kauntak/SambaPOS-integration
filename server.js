@@ -10,11 +10,15 @@ const dotenv = require('dotenv');
 dotenv.config();
 const listenPort = process.env.LISTEN_PORT;
 
-
+//writing to log for the server.
 function writeToLog(content){
     log.write("Server", content);
 }
 
+//main function to start server.
+//paired with ngrok server.
+//if url is /deliverect and method is post will call the deliverect process function
+//if url is /report and method is get, it will pull report data from SambaPOS
 async function start(){
 	writeToLog("Server Started.\r\n\r\n\r\n");
 	http.createServer((req, res) => {

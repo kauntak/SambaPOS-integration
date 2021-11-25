@@ -13,12 +13,12 @@ const ngrok_options = {
 };
 //start();
 
-
+//writing to log for ngrok webhook server
 function writeToLog(content){
     log.write("Webhook", content);
 }
 
-
+//starting ngrok server.
 async function start(){
     const url = await ngrok.connect(ngrok_options);
 	const api = ngrok.getApi();

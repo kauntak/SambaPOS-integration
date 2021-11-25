@@ -1,6 +1,5 @@
 module.exports = {connect, insertIntoPaymentsDB, insertIntoDeliverectDB};
 
-
 const Connection = require('tedious').Connection;
 const Request = require('tedious').Request;
 const TYPES = require('tedious').TYPES;
@@ -31,11 +30,12 @@ const config = {
   }
 let connection;
 
-
+//write to log for SQL
 function writeToLog(content){
     log.write("SQL", content);
 }
 
+//connecting to database.
 function connect(callback){
     connection = new Connection(config);
     connection.on('connect', err => {
@@ -51,6 +51,7 @@ function connect(callback){
 	connection.connect();
 }
 
+//Inserting processed data received from Clover into CreditTerminalTransaction
 function insertIntoPaymentsDB(paymentData){
 	let qry = `DECLARE @JSON NVARCHAR(MAX) = '${JSON.stringify(paymentData)}';
 			
@@ -93,7 +94,7 @@ function insertIntoPaymentsDB(paymentData){
 	connection.execSql(Rqst);
 }
 
-
+//inserting processed data received from Deliverect into DeliverectOrders
 function insertIntoDeliverectDB(data){
 	let qry = `DECLARE @JSON NVARCHAR(MAX) = '${JSON.stringify(data)}';
 			

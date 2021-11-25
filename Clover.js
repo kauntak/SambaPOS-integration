@@ -9,19 +9,25 @@ dotenv.config();
 
 const cloverMID = process.env.CLOVER_MID;
 const cloverKey = process.env.CLOVER_KEY;
-
+const paymentType = process.env.CLOVER_PAYMENT_TYPE;
+//how long to pause between loop iteration
 //minutes x 60000 milliseconds(1minute)
 const timeout = 6 * 60000;
+//How many minute delay to have for closing paid tickets.
+const delay = 10;
 
 let employeeList = [];
 let paymentData = [];
+let readDate = new Date();
 let isTest = false;
 
-
+//Writing to log for Clover
 function writeToLog(content){
     log.write("Clover", content);
 }
-start();
+
+//main function to run the Clover integration.
+//Will run an infinite loop, running the function loop(), and will pause for "timeout" milliseconds
 async function start(testing){
     if(testing)
         isTest = true;
@@ -34,8 +40,15 @@ async function start(testing){
 
 }
 
+//the main function to be looped.
+//Will read a date/time in the database for the last poll time and poll Clover for new payments after that date/time
+//Will get open tickets from SambaPOS
+//Iterate through the Clover Payments to check the charged amount against the remaining amount, and once found a match will settle that ticket.
+//If there are any remaining tickets it will check if two payments were made for one ticket or if two tickets were paid together.
+//Will set the database value for last read time to current time
+//Insert payment data into database.
 async function loop(){
-    let date = await samba.getCloverLastRead(10 + (timeout / 60000) + 4320);
+    let date = await samba.getCloverLastRead(delay + (timeout / 60000) + 4320);
     let paymentOptions = `filter=createdTime>=${date.getTime()}`;
     paymentData.push(...processData(await getFromClover("payments", paymentOptions)));
     if(paymentData.length == 0 ){
@@ -74,13 +87,11 @@ async function loop(){
 					unpaid[i].paid = true;
 					unpaid[j].paid = true;
 					paidCount += 2;
-					let paymentIndex = paymentData.findIndex(payment => payment.id == unpaid[i].id);
-                    await samba.payTicket(terminalId, tickets[index].id, paymentData[paymentIndex].amount);
-					paymentData[paymentIndex].paid = true;
-					paymentIndex = paymentData.findIndex(payment => payment.id == unpaid[j].id);
-                    await samba.payTicket(terminalId, tickets[index].id, paymentData[paymentIndex].amount);
-					paymentData[paymentIndex].paid = true;
-                    await samba.closeTicket();
+					let paymentIndex = [paymentData.findIndex(payment => payment.id == unpaid[i].id)];
+					paymentIndex.push(paymentData.findIndex(payment => payment.id == unpaid[j].id));
+                    await samba.payTicket(terminalId, tickets[index].id, [paymentData[paymentIndex[0]].amount,paymentData[paymentIndex[1]].amount], paymentType);
+					paymentData[paymentIndex[0]].paid = true;
+					paymentData[paymentIndex[1]].paid = true;
 					break;
 				}
 				j++;
@@ -94,10 +105,8 @@ async function loop(){
 					let index = unpaid.findIndex(payment => payment.amount == amount && !payment.paid);
 					if(index != -1){
 						//list.ticketsToPay.push(tickets[i].id, tickets[j].id);
-                        await samba.payTicket(terminalId, tickets[i].id, tickets[i].remainingAmount);
-                        await samba.closeTicket();
-                        await samba.payTicket(terminalId, tickets[j].id, tickets[j].remainingAmount);
-                        await samba.closeTicket();
+                        await samba.payTicket(terminalId, tickets[i].id, tickets[i].remainingAmount, paymentType);
+                        await samba.payTicket(terminalId, tickets[j].id, tickets[j].remainingAmount, paymentType);
 						unpaid[index].paid = true;
 						tickets.splice(i,1);
 						tickets.splice(j,1);
@@ -109,10 +118,10 @@ async function loop(){
 		}
 	}
     await samba.closeTerminal();
-	await samba.setCloverLastRead();
+	await samba.setCloverLastRead(readDate);
     await sql.connect(() => sql.insertIntoPaymentsDB(paymentData));
 }
-
+//Load employees registered on the Clover system.
 function loadEmployees(){
 	return getFromClover('employees',undefined)
 		.then( data => {
@@ -121,7 +130,9 @@ function loadEmployees(){
     });
 }
 
-
+//function for polling Clover
+//Type:Payments,Employees, etc.
+//options:createdTime,etc.
 function getFromClover(type,options) {
     let reqData = {
         headers: {
@@ -146,29 +157,39 @@ function getFromClover(type,options) {
     });
 }
 
-function processData(payments)
-{
+//Will process data received from Clover into an array of payment object(s).
+//Filter for result == "SUCCESS" as well as tickets were before the delay time.
+//read employee id from employee list
+//object will be:
+//payment Id
+//employee: employee id, and name
+//time(created time)
+//amount charged
+//tip amount
+//payment result
+function processData(payments){
 	writeToLog("Processing data");
 	let date = new Date();
+	readDate = new Date();
 	date.setMinutes(date.getMinutes() - 10);
 	payments = payments.filter(x => x.result == "SUCCESS" && new Date(x.createdTime) < date).map(x => {
 		x.employee = {id: x.employee.id,
 			name: `${employeeList.filter(y => y.id == x.employee.id)[0]?employeeList.filter(y => y.id == x.employee.id)[0].name:'No Name'}`};
 		return {
 			id: x.id,
-				employee: {
-					id: x.employee.id,
-					name: x.employee.name},
-				time: x.createdTime,
-				amount: x.amount,
-				tipAmount: x.tipAmount,
-				result: x.result
-			};
-		});
-	console.log(payments);
+			employee: {
+				id: x.employee.id,
+				name: x.employee.name},
+			time: x.createdTime,
+			amount: x.amount,
+			tipAmount: x.tipAmount,
+			result: x.result
+		};
+	});
 	return payments;
 }
 
+//function called when processing JSON.parse on data received from Clover
 function processCloverJSON(key,value)
 {
 	if(key == "amount" || key == "tipAmount")

@@ -9,6 +9,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const gloriaFoodKey = process.env.GLORIAFOOD_KEY;
+const ticketType =  process.env.GLORIAFOOD_TICKET_TYPE;
 const timeout = 2000;
 
 var createTicketQry = "";
@@ -20,12 +21,12 @@ var testQry = `{"query":"{isEntityExists(type:\"Customers\",name:\"Jennifer Domi
 var lastBody;
 var lastQryCompleted = true;
 
-
+//writing to log for Gloriafood
 function writeToLog(content){
     log.write("Gloria", content);
 }
 
-
+//starting GloriaFood integration app. will run an infinite loop, running the "loop" function
 async function start(testing){
     if(testing)
         isTest = true;
@@ -36,6 +37,8 @@ async function start(testing){
     }
 }
 
+//the function to be looped.
+//Polls tickets from GloriaFoods and if there are tickets will process them.
 async function loop() {
     writeToLog('Reading Tickets...');
     var tickets = await readTickets();
@@ -43,6 +46,7 @@ async function loop() {
         processTickets(tickets);
 }
 
+//Poll GloriaFoods for any accepted tickets
 async function readTickets() {
 	reqData = {
 		method: 'POST',
@@ -77,12 +81,40 @@ async function readTickets() {
         return false;
     });
 }
-
+//Will process each ticket in the bulk data.
+//Format for recieved data is:
+//{"count": ? ,"orders":[...]}
+//if count is 0, will terminate.
 function processTickets(tickets) {
     if (tickets.count == 0) return;
     tickets.orders.forEach((order) => processOrder(order));
 }
 
+//Order object is made up of the following:
+//instructions:String,      coupons:Array,               tax_list:Array[{"type":"item","value":6.7,"rate":0.05}]
+//missed_reason:String,     billing_details:String,      fulfillment_option:String
+//table_number:String,      id:String,                   total_price:float,
+//sub_total_price:float,    tax_value:float,             persons:int
+//latitude:float,           longitude:float,             client_first_name:String
+//client_last_name:String,  client_email:String,         client_phone:String
+//restaurant_name:String,   currency:String,             type:String
+//status:String,            source:String,               pin_skipped:boolean
+//accepted_at:String,       tax_type:String,             tax_name:String
+//fulfill_at:String,        client_language:String,      integration_payment_provider:String
+//integration_payment_amount:int,   reference:String,    restaurant_id:int
+//client_id:int,                updated_at:String,       restaurant_phone:String
+//restaurant_timezone:String,   card_type:String,        used_payment_methods:Array[String]
+//company_account_id:int,       pos_system_id:int,       restaurant_key:String
+//restaurant_country:String,    restaurant_city:String,  restaurant_state:String
+//restaurant_zipcode:String,    restaurant_street:String,restaurant_latitude:String
+//restaurant_longitude:String,  client_marketing_consent:boolean
+//restaurant_token:String,      gateway_transaction_id:int?
+//gateway_type:String??,        api_version:int,         payment:String
+//for_later:boolean,            client_address:String    client_address_parts:String
+//items:Array[{id:int, name:String,total_item_price:float,price:float,quantity:int,instructions:String, type:String, type_id:int,tax_rate:float,tax_value:float,parent_id:int,item_discount:int,cart_discount_rate:int,cart_discount:float,tax_type:String,options:Array[...]}}
+//
+//
+//will split data into customer, service fees, instructions, and items
 async function processOrder(order) {
     var customer = {
         firstName: order.client_first_name,
@@ -99,12 +131,13 @@ async function processOrder(order) {
 	   .filter(x => x.type === 'tip' || x.type === 'delivery_fee' || x.type === 'promo_cart')
 		.filter(x => x.name)
 	   .map(x => { return { name: getCalculationName(x.type), amount: Math.abs((x.cart_discount_rate) * 100) || x.price}; }) 
-	let items = await samba.loadItems(order.items.map(x => processItem(x)))
-    let ticketId = await samba.createTicket(sambaCustomer, items, order.instructions, order.fulfill_at, services, "Gloria");
+	let items = await samba.loadItems(order.items.map(x => processItem(x)));
+    await samba.createTicket(sambaCustomer, items, order.instructions, order.fulfill_at, services, ticketType);
     lastQryCompleted = true;
 	return;
 }
 
+//service fees: promotional discounts, tip, and delivery fee
 function getCalculationName(name) {
     if (name === 'promo_cart') return promotionDiscount;
     if (name === 'tip') return tipCalculation;
@@ -112,204 +145,7 @@ function getCalculationName(name) {
     return undefined;
 }
 
-function loadItems(items) {
-	if(isTest)
-	{
-		writeToLog("Line 175: loadItems\r\n" + JSON.stringify(items) + "\r\n\r\n");
-	}
-    var script = getLoadItemsScript(items);
-    return gql(script)
-		.then(data => {
-			return (items.filter(x => x.type === 'item').map(item => {
-				return {
-					id: item.id,
-					name: item.name,
-					type: item.type,
-					sambaName: data[`i${item.id}`]===null ? miscProductName : data[`i${item.id}`].name,
-					price: item.price,
-					quantity: item.quantity,
-					instructions: item.instructions,
-					options: item.options,
-					portions: item.portions,
-					groupCode: data[`i${item.id}`]===null ? miscProductName : data[`i${item.id}`].groupCode
-				}
-			}));
-		});
-}
-
-function isNewCustomer(customer) {
-    if (customer.states && customer.states.find(x => x.stateName === 'CStatus')) {
-        return customer.states.find(x => x.stateName === 'CStatus').state === 'Unconfirmed';
-    }
-    return false;
-}
-
-function createTicket(customer, items, instructions, fulfill_at, services) {
-	if(isTest)
-	{
-		writeToLog("Line 214: createTicket Item check\r\n" + JSON.stringify(items, undefined, 2) + "\r\n\r\n");
-	}
-    var newCustomer = isNewCustomer(customer);
-    return gql(getAddTicketScript(items, customer.name, newCustomer, instructions, fulfill_at, services))
-		.then( data => {
-		return (data.addTicket.id);
-		});
-}
-
-function loadCustomer(customer) {
-	return gql( getIsEntityExistsScript(customer) )
-		.then( data => {
-			if (!data.isEntityExists)
-				return createCustomer(customer);
-			else 
-				return getCustomer(`${customer.firstName} ${customer.lastName}-${customer.phone	}`);
-		});
-}
-
-function createCustomer(customer) {
-    return gql(getAddCustomerScript(customer))
-		.then( data => {
-			gql(getNewCustomerStateScript(customer));
-			return getCustomer(data.addEntity.name);
-		});
-}
-
-function getCustomer(customerName) {
-    return gql(getCustomerScript(customerName))
-		.then( data => {
-			return data.getEntity;
-		});
-}
-
-function getLoadItemsScript(items) {
-    var part = items.map(item => `i${item.id}: getProduct(name:"${item.name}"){name, groupCode} `);
-    return `{${part}}`;
-}
-
-function getCustomerScript(name) {
-    return `{getEntity(type:"${customerEntityType}",name:"${name}"){name,customData{name,value},states{stateName,state}}}`;
-}
-
-function getIsEntityExistsScript(customer) {
-    return `{isEntityExists(type:"${customerEntityType}",name:"${customer.firstName} ${customer.lastName}-${customer.phone}")}`;
-}
-
-function getAddCustomerScript(customer) {
-    return `
-    mutation m{addEntity(entity:{
-        entityType:"${customerEntityType}",name:"${customer.firstName} ${customer.lastName}-${customer.phone}",customData:[
-            {name:"First Name",value:"${customer.firstName}"},
-            {name:"Last Name",value:"${customer.lastName}"},
-            {name:"Address",value:"${customer.address}"},
-            {name:"EMail",value:"${customer.email}"},
-            {name:"Phone",value:"${customer.phone}"}
-        ]})
-        {name}
-    }`;
-}
-
-function getNewCustomerStateScript(customer) {
-    return `mutation m{updateEntityState(entityTypeName:"${customerEntityType}",entityName:"${customer.firstName} ${customer.lastName}-${customer.phone}",state:"Unconfirmed",stateName:"CStatus"){name}}`;
-}
-
-function GetOrderTags(order) {
-    if (order.options) {
-        var options = order.options.map(x => {
-			if(x.group_name.includes("Salmon Type"))
-			{
-				if(x.name.includes("Sockeye"))
-					return `{tagName:"Salmon Type",tag:"Sal > Sockeye",price:${x.price},quantity:${x.quantity}}`;
-				else return;
-			}
-			else if(x.group_name === "Rolls")
-				return `{tagName:"Combo Rolls",tag:"${x.name}",price:${x.price},quantity:${x.quantity}}`;
-			return `{tagName:"Default",tag:"${x.group_name}:${x.name}",price:${x.price},quantity:${x.quantity}}`;});
-        if (order.instructions && order.instructions !== '') {
-			order.instructions = order.instructions.replace(/\n/g, '  ');
-            options.push(`{tagName:"Default",tag:"Instructions: ${order.instructions}"}`);
-        }
-		if(order.sambaName === miscProductName)
-		{
-			options.push(`{tagName:"Item Name",tag:"${order.name}"}`);
-		}
-        var result = options.join();
-        return `tags:[${result}],`
-    }
-    return "";
-}
-
-function GetPortions(order) {
-    if (order.portions.length != 0) {
-		var portions = order.portions.map(x => `portion:"${x.name}",` );
-        var result = portions.join();
-        return `${result}`
-    } 
-    return "";  
-}
-
-function GetOrderPrice(order) {
-	if(order.portions.length !=0){
-		var price = order.portions.map(x => `price:${Math.abs((x.price) + (order.price))},`);
-        var result = price.join();
-        return `${result}`;
-        }
-	return `price:${order.price},`;
-}
-
-function getAddTicketScript(orders, customerName, newCustomer, instructions, fulfill_at, services) {
-	if(isTest)
-	{
-		writeToLog("Line311: getAddTicketScript\r\n" + JSON.stringify(orders, undefined, 2) + "\r\n\r\n");
-	}
-	console.log(fulfill_at);
-    var orderLines = orders.filter(x => x.groupCode != 'Temporary open hours!!!!').map(order => {
-        return `{
-            name:"${order.sambaName ? order.sambaName : order.name}",
-            menuItemName:"${order.sambaName === miscProductName ? miscProductName : ''}",
-            quantity:${order.quantity > 0 ? order.quantity : 1},
-            ${GetPortions(order)}
-            ${GetOrderPrice(order)}
-            ${GetOrderTags(order)}
-            states:[
-                {stateName:"Status",state:"Submitted"}]
-        }`;
-    });
-
-    var entityPart = customerName
-        ? `entities:[{entityType:"${customerEntityType}",name:"${customerName}"}],`:'';
-    var calculationsPart = services
-        ? `calculations:[${services.map(x => `{name:"${x.name}",amount:${x.amount}}`).join()}],`
-        : '';
-	
-	var coeff = 1000 * 60 * 5;
-	var date = new Date(fulfill_at);
-	date = new Date(Math.round(date.getTime() / coeff) * coeff);
-	
-	var time = `${date.getHours()}:${date.getMinutes()<10?"0"+ date.getMinutes():date.getMinutes()}`;
-	
-    var result = `
-        mutation m{addTicket(
-            ticket:{type:"${ticketType}",
-                department:"${departmentName}",
-                user:"${userName}",
-                terminal:"${terminalName}",
-                note:"${instructions !== null ? instructions : ''}",
-                ${entityPart}
-                states:[
-                    {stateName:"Status",state:"Unconfirmed"}
-					${date.getDate() != new Date().getDate() ?',{stateName:"Pickup Status",state:"Future"}':''}],
-                tags:[{tagName:"Pickup Date",tag:"${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}"},{tagName:"Pickup Time", tag:"${time}"}],
-                ${calculationsPart}
-                orders:[${orderLines.join()}]
-            }){id}}`;
-	createTicketQry = result;
-	if(isTest)
-	{
-		writeToLog("Line 348: getAddTicketScript:\r\n" + result + "\r\n\r\n");
-	}
-    return result;
-} 
-
+//will process items into a SambaPOS readable item.
 function processItem(item) {
     var result = {
         id: item.id,
