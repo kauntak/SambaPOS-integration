@@ -210,10 +210,7 @@ function openTerminal(){
 //load a ticket, make payments, and close ticket.
 async function payTicket(terminalId, ticketId, amount, paymentType){
 	await gql(getLoadTicketScript(terminalId,ticketId));
-    if(!amount instanceof Array)
-        amount = [amount];
-    for(let i in amount)
-        await gql(getPayTicketScript(terminalId, amount, paymentType));
+    await gql(getPayTicketScript(terminalId, amount, paymentType));
     await closeTicket(terminalId);
 }
 
@@ -248,9 +245,8 @@ function getCloseTicketScript(terminalId){
 	return `mutation close {closeTerminalTicket(terminalId:"${terminalId}") }`;
 }
 
-function getPostBroadcastScript(list){
-	list = JSON.stringify(list).replace(/["]/g, "\\\"");
-	return `mutation broadcast {postBroadcastMessage(message:"${list}"){message} }`;
+function getPostBroadcastScript(msg){
+	return `mutation broadcast {postBroadcastMessage(message:"${msg}"){message} }`;
 }
 
 
