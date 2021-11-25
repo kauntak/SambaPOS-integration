@@ -9,7 +9,7 @@ const log = require('./log');
 const dotenv = require('dotenv');
 dotenv.config();
 const listenPort = process.env.LISTEN_PORT;
-
+const hostname = 'localhost';
 //writing to log for the server.
 function writeToLog(content){
     log.write("Server", content);
@@ -20,7 +20,7 @@ function writeToLog(content){
 //if url is /deliverect and method is post will call the deliverect process function
 //if url is /report and method is get, it will pull report data from SambaPOS
 async function start(){
-	writeToLog("Server Started.\r\n\r\n\r\n");
+	writeToLog("Server Starting.\r\n\r\n\r\n");
 	http.createServer((req, res) => {
 		let {headers, method, url} = req;
 		let body = "";
@@ -51,6 +51,6 @@ async function start(){
                 writeToLog(body);
         }
 		res.end();
-	}).listen(listenPort);
+	}).listen(listenPort, hostname, () => {writeToLog(`Server started on port ${listenPort}`)});
 	return;
 }
