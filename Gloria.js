@@ -121,7 +121,7 @@ async function processOrder(order) {
     let customer = {
         type: customerEntityType,
         name: `${order.client_first_name} ${order.client_last_name}-${phone}`,
-        customData: `[
+        customData: `,customData:[
             {name:"First Name",value:"${order.client_first_name}"},
             {name:"Last Name",value:"${order.client_last_name}"},
             {name:"Address",value:"${order.client_address}"},
