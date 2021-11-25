@@ -16,12 +16,12 @@ const Deliverect = require('./Deliverect');
 const server = process.env.MESSAGE_SERVER;
 const messageServerPort = process.env.MESSAGE_SERVER_PORT;
 const serverKey = process.env.SERVER_KEY;
-const customerEntityType = 'Customers';
 
 const userName = process.env.USERNAME;
 const password = process.env.PASSWORD;
 const terminalName = 'Server';
 const miscProductName = 'Misc';
+const departmentName = 'Takeout';
 
 var accessToken = undefined;
 var accessTokenExpires = '';
@@ -277,7 +277,7 @@ function loadItems(items) {
 }
 //creating a SambaPOS ticket from customer, items, ticket note, fulfilment time, service fees, and ticekt type
 function createTicket(customer, items, instructions, fulfill_at, services, type) {
-    return gql(getAddTicketScript(items, customer.name, instructions, fulfill_at, services, type))
+    return gql(getAddTicketScript(items, customer, instructions, fulfill_at, services, type))
 		.then( data => {
             var ticketId = data.addTicket.id;
             gql('mutation m {postTicketRefreshMessage(id:0){id}}');
@@ -293,7 +293,7 @@ function loadCustomer(customer) {
 			if (!data.isEntityExists)
 				return createCustomer(customer);
 			else 
-				return getCustomer(`${customer.firstName} ${customer.lastName}-${customer.phone	}`);
+				return getCustomer(customer);
 		});
 }
 
@@ -302,13 +302,13 @@ function createCustomer(customer) {
     return gql(getAddCustomerScript(customer))
 		.then( data => {
 			gql(getNewCustomerStateScript(customer));
-			return getCustomer(data.addEntity.name);
+			return getCustomer(customer);
 		});
 }
 
 //retreive a customer from SambaPOS
-function getCustomer(customerName) {
-    return gql(getCustomerScript(customerName))
+function getCustomer(customer) {
+    return gql(getCustomerScript(customer))
 		.then( data => {
 			return data.getEntity;
 		});
@@ -320,30 +320,24 @@ function getLoadItemsScript(items) {
     return `{${part}}`;
 }
 
-function getCustomerScript(name) {
-    return `{getEntity(type:"${customerEntityType}",name:"${name}"){name,customData{name,value},states{stateName,state}}}`;
+function getCustomerScript(customer) {
+    return `{getEntity(type:"${customer.type}",name:"${customer.name}"){type,name,customData{name,value},states{stateName,state}}}`;
 }
 
 function getIsEntityExistsScript(customer) {
-    return `{isEntityExists(type:"${customerEntityType}",name:"${customer.firstName} ${customer.lastName}-${customer.phone}")}`;
+    return `{isEntityExists(type:"${customer.type}",name:"${customer.name}")}`;
 }
 
 function getAddCustomerScript(customer) {
     return `
     mutation m{addEntity(entity:{
-        entityType:"${customerEntityType}",name:"${customer.firstName} ${customer.lastName}-${customer.phone}",customData:[
-            {name:"First Name",value:"${customer.firstName}"},
-            {name:"Last Name",value:"${customer.lastName}"},
-            {name:"Address",value:"${customer.address}"},
-            {name:"EMail",value:"${customer.email}"},
-            {name:"Phone",value:"${customer.phone}"}
-        ]})
+        entityType:"${customer.type}",name:"${customer.name}",customData:${customer.customData}})
         {name}
     }`;
 }
 
 function getNewCustomerStateScript(customer) {
-    return `mutation m{updateEntityState(entityTypeName:"${customerEntityType}",entityName:"${customer.firstName} ${customer.lastName}-${customer.phone}",state:"Unconfirmed",stateName:"CStatus"){name}}`;
+    return `mutation m{updateEntityState(entityTypeName:"${customer.type}",entityName:"${customer.name}",state:"Unconfirmed",stateName:"CStatus"){name}}`;
 }
 
 function GetOrderTags(order) {
@@ -390,7 +384,7 @@ function GetOrderPrice(order) {
 	return `price:${order.price},`;
 }
 
-function getAddTicketScript(orders, customerName, instructions, fulfill_at, services, type) {
+function getAddTicketScript(orders, customer, instructions, fulfill_at, services, type) {
     var orderLines = orders.filter(x => x.groupCode != 'Temporary open hours!!!!').map(order => {
         return `{
             name:"${order.sambaName ? order.sambaName : order.name}",
@@ -404,8 +398,8 @@ function getAddTicketScript(orders, customerName, instructions, fulfill_at, serv
         }`;
     });
 
-    var entityPart = customerName
-        ? `entities:[{entityType:"${customerEntityType}",name:"${customerName}"}],`:'';
+    var entityPart = customer
+        ? `entities:[{entityType:"${customer.type}",name:"${customer.name}"}],`:'';
     var calculationsPart = services
         ? `calculations:[${services.map(x => `{name:"${x.name}",amount:${x.amount}}`).join()}],`
         : '';
