@@ -10,13 +10,13 @@ dotenv.config();
 
 const gloriaFoodKey = process.env.GLORIAFOOD_KEY;
 const ticketType =  process.env.GLORIAFOOD_TICKET_TYPE;
+const customerEntityType = 'Customers';
 const timeout = 2000;
 
 var createTicketQry = "";
 
 var isTest = false;
-var testBody = `{"count":1,"orders":[{"instructions":"If possible could you please add a note:\n\"Happy Birthday Ivy!!\" :)\n\nThank you!","coupons":[],"tax_list":[{"type":"item","value":6.7,"rate":0.05}],"missed_reason":null,"billing_details":null,"fulfillment_option":null,"table_number":null,"id":403041500,"total_price":140.6,"sub_total_price":133.9,"tax_value":6.7,"persons":0,"latitude":null,"longitude":null,"client_first_name":"Tyler","client_last_name":"Roesler","client_email":"tyler@roesler.com","client_phone":"+14039697477","restaurant_name":"Big Catch Sushi Bar","currency":"CAD","type":"pickup","status":"accepted","source":"mobile_web","pin_skipped":false,"accepted_at":"2021-11-17T23:15:40.000Z","tax_type":"NET","tax_name":"GST","fulfill_at":"2021-11-18T00:15:00.000Z","client_language":"en","integration_payment_provider":null,"integration_payment_amount":0,"reference":null,"restaurant_id":119850,"client_id":9966368,"updated_at":"2021-11-17T23:15:40.000Z","restaurant_phone":"+1 403 708 5555","restaurant_timezone":"America/Edmonton","card_type":null,"used_payment_methods":["CARD"],"company_account_id":690517,"pos_system_id":30221,"restaurant_key":"r4gDyCxd0s1D3d5n0","restaurant_country":"Canada","restaurant_city":"Calgary","restaurant_state":"Alberta","restaurant_zipcode":"T2V0R6","restaurant_street":"8835 Macleod Tr SW #130","restaurant_latitude":"50.975124689951656","restaurant_longitude":"-114.07356644351654","client_marketing_consent":true,"restaurant_token":"EojqZcbeNU0dXnJlpn","gateway_transaction_id":null,"gateway_type":null,"api_version":2,"payment":"CARD","for_later":true,"client_address":null,"client_address_parts":null,"items":[{"id":552404478,"name":"Extra Ginger","total_item_price":0.25,"price":0.25,"quantity":1,"instructions":"","type":"item","type_id":8727967,"tax_rate":0.05,"tax_value":0.0125,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[]},{"id":552404520,"name":"Extra Wasabi","total_item_price":0.25,"price":0.25,"quantity":1,"instructions":"","type":"item","type_id":8727968,"tax_rate":0.05,"tax_value":0.0125,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[]},{"id":552404952,"name":"Atlantic Salmon Sashimi 5pc","total_item_price":21.9,"price":10.95,"quantity":2,"instructions":"","type":"item","type_id":3265116,"tax_rate":0.05,"tax_value":1.095,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[]},{"id":552405001,"name":"Albacore Tuna Sashimi 5pc","total_item_price":21.5,"price":10.75,"quantity":2,"instructions":"","type":"item","type_id":3265117,"tax_rate":0.05,"tax_value":1.075,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[]},{"id":552405396,"name":"Tamago","total_item_price":7.4,"price":1.85,"quantity":4,"instructions":"","type":"item","type_id":3265161,"tax_rate":0.05,"tax_value":0.37,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[]},{"id":552405729,"name":"Green Halo","total_item_price":16.45,"price":16.45,"quantity":1,"instructions":"Extra serrano chilies please :)","type":"item","type_id":3247106,"tax_rate":0.05,"tax_value":0.8225,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[{"id":495973503,"name":"Atlantic","price":0,"group_name":"Salmon Type","quantity":1,"type":"option","type_id":3558546}]},{"id":552405858,"name":"Zesty Avalanche","total_item_price":16.45,"price":16.45,"quantity":1,"instructions":"","type":"item","type_id":5946419,"tax_rate":0.05,"tax_value":0.8225,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[{"id":495973581,"name":"Atlantic","price":0,"group_name":"Salmon Type","quantity":1,"type":"option","type_id":3558546}]},{"id":552405964,"name":"Passion Sunrise","total_item_price":14.75,"price":14.75,"quantity":1,"instructions":"","type":"item","type_id":3265083,"tax_rate":0.05,"tax_value":0.7375,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[{"id":495973643,"name":"Atlantic","price":0,"group_name":"Salmon Type","quantity":1,"type":"option","type_id":3558546}]},{"id":552406021,"name":"God of Wind","total_item_price":14.75,"price":14.75,"quantity":1,"instructions":"","type":"item","type_id":3265085,"tax_rate":0.05,"tax_value":0.7375,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[]},{"id":552406440,"name":"Avocado Roll","total_item_price":8.95,"price":8.95,"quantity":1,"instructions":"Cut small please :)","type":"item","type_id":3265110,"tax_rate":0.05,"tax_value":0.4475,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[]},{"id":552407118,"name":"Prawn Tempura","total_item_price":11.25,"price":11.25,"quantity":1,"instructions":"","type":"item","type_id":3267593,"tax_rate":0.05,"tax_value":0.5625,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[]}]}]}`;
-var testQry = `{"query":"{isEntityExists(type:\"Customers\",name:\"Jennifer Dominie-+14038266041\")}"}`;
+var testBody = `{"count":1,"orders":[{"instructions":"","coupons":[],"tax_list":[{"type":"item","value":4.61,"rate":0.05}],"missed_reason":null,"billing_details":null,"fulfillment_option":null,"table_number":null,"id":407129522,"total_price":96.81,"sub_total_price":92.2,"tax_value":4.61,"persons":0,"latitude":null,"longitude":null,"client_first_name":"Redacted","client_last_name":"Redacted","client_email":"redacted@redacted.com","client_phone":"+5555555755","restaurant_name":"Big Catch Sushi Bar","currency":"CAD","type":"pickup","status":"accepted","source":"mobile_web","pin_skipped":false,"accepted_at":"2021-11-25T00:27:38.000Z","tax_type":"NET","tax_name":"GST","fulfill_at":"2021-11-26T00:52:38.000Z","client_language":"en","integration_payment_provider":null,"integration_payment_amount":0,"reference":null,"restaurant_id":119850,"client_id":10123236,"updated_at":"2021-11-25T00:27:38.000Z","restaurant_phone":"+1 403 708 5555","restaurant_timezone":"America/Edmonton","card_type":null,"used_payment_methods":["CARD"],"company_account_id":80000,"pos_system_id":30221,"restaurant_key":"redacted","restaurant_country":"Canada","restaurant_city":"Calgary","restaurant_state":"Alberta","restaurant_zipcode":"T2V0R6","restaurant_street":"8835 Macleod Tr SW #130","restaurant_latitude":"50.975124689951656","restaurant_longitude":"-114.07356644351654","client_marketing_consent":true,"restaurant_token":"redacted","gateway_transaction_id":null,"gateway_type":null,"api_version":2,"payment":"CARD","for_later":false,"client_address":null,"client_address_parts":null,"items":[{"id":557930929,"name":"Sprout ・ 2 - 3ppl","total_item_price":52.75,"price":52.75,"quantity":1,"instructions":"","type":"item","type_id":3247017,"tax_rate":0.05,"tax_value":2.6375,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[{"id":500559353,"name":"Atlantic Salmon","price":0,"group_name":"Sprout Platter Salmon Type","quantity":1,"type":"option","type_id":9691825}]},{"id":557931549,"name":"Iron Goddess","total_item_price":16.45,"price":16.45,"quantity":1,"instructions":"","type":"item","type_id":3247109,"tax_rate":0.05,"tax_value":0.8225,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[]},{"id":557932227,"name":"Jupiter Rain","total_item_price":16.25,"price":16.25,"quantity":1,"instructions":"","type":"item","type_id":3247145,"tax_rate":0.05,"tax_value":0.8125,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[]},{"id":557933054,"name":"Crispy Gyoza","total_item_price":6.75,"price":6.75,"quantity":1,"instructions":"","type":"item","type_id":3267616,"tax_rate":0.05,"tax_value":0.3375,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[]}]}]}`;
 
 var lastBody;
 var lastQryCompleted = true;
@@ -34,6 +34,7 @@ async function start(testing){
     while(true){
 	    await loop();
         await new Promise(r => setTimeout(r, timeout));
+        if(isTest) break;
     }
 }
 
@@ -116,14 +117,18 @@ function processTickets(tickets) {
 //
 //will split data into customer, service fees, instructions, and items
 async function processOrder(order) {
-    var customer = {
-        firstName: order.client_first_name,
-        lastName: order.client_last_name,
-        email: order.client_email,
-        phone: order.client_phone,
-        address: order.client_address,
-        newCustomer: false
-    }
+    let phone = processPhone(order.client_phone);
+    let customer = {
+        type: customerEntityType,
+        name: `${order.client_first_name} ${order.client_last_name}-${phone}`,
+        customData: `[
+            {name:"First Name",value:"${order.client_first_name}"},
+            {name:"Last Name",value:"${order.client_last_name}"},
+            {name:"Address",value:"${order.client_address}"},
+            {name:"EMail",value:"${order.client_email}"},
+            {name:"Phone",value:"${phone}"}
+        ]`
+    };
 	if(order.instructions)
 		order.instructions = order.instructions.replace(/\\"/g, '\\\\"');
     let sambaCustomer = await samba.loadCustomer(customer);
@@ -143,6 +148,11 @@ function getCalculationName(name) {
     if (name === 'tip') return tipCalculation;
     if (name === 'delivery_fee') return deliveryFeeCalculation;
     return undefined;
+}
+
+//process phone number
+function processPhone(phone){
+    return phone.match(/^\+?(\d{10})/)[1];
 }
 
 //will process items into a SambaPOS readable item.
