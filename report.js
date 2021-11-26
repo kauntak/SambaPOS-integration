@@ -21,7 +21,7 @@ function getHoldReportTable(){
         return buildTable(data);
     });
 }
-
+//Will retrieve Hold order data from Database
 function getHoldReportData(){
     return sql.connect("getHoldReportData");
 }
