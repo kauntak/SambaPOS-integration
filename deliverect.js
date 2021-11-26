@@ -53,7 +53,7 @@ async function start(testing){
 	return;
 }
 
-//will check order total, if 0 return
+//will check total orders, if 0 return
 //for each order that is received it will check the order status and call the required function.
 //after orders have been processed, the orders will be inserted into DeliverectOrders database
 async function processDeliverect(data) {

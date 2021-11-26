@@ -5,6 +5,7 @@ const http = require('http');
 const deliverect = require('./Deliverect');
 const samba = require('./Samba');
 const log = require('./log');
+const report = require('./report');
 
 const dotenv = require('dotenv');
 dotenv.config();
@@ -21,7 +22,7 @@ function writeToLog(content){
 //if url is /report and method is get, it will pull report data from SambaPOS
 async function start(){
 	writeToLog("Server Starting.\r\n\r\n\r\n");
-	http.createServer((req, res) => {
+	http.createServer(async (req, res) => {
 		let {headers, method, url} = req;
 		let body = "";
 		let orderId = [];
@@ -43,8 +44,8 @@ async function start(){
                 break;
             case "/reports":
                 if(method == "GET"){
-                    res.setHeader('Content-Type', 'application/xhtml+xml');
-                    res.write(`<h1>REPORTS</h1>`);
+                    res.setHeader('Content-Type', 'text/html');
+                    res.write(await report.getReport());
                 }
                 break;
             default:

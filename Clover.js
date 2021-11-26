@@ -63,6 +63,8 @@ function writeToLog(content){
 //main function to run the Clover integration.
 //Will run an infinite loop, running the function loop(), and will pause for "timeout" milliseconds
 async function start(testing){
+	//sql.connect(sql.retreiveHoldOrders());
+	//return;
     if(testing)
         isTest = true;
 	writeToLog("Clover Started.\r\n\r\n\r\n");
@@ -84,6 +86,8 @@ async function start(testing){
 async function loop(){
 	if(isTest){
 		paymentData = testData;
+		await sql.connect("Hold Total Report");
+		return;
 	}
 	else{
 		let date = await samba.getCloverLastRead(delay + (timeout / 60000) + 4320);
@@ -157,7 +161,7 @@ async function loop(){
 	}
     await samba.closeTerminal(terminalId);
 	await samba.setCloverLastRead(readDate);
-    await sql.connect(() => sql.insertIntoPaymentsDB(paymentData));
+    await sql.connect(sql.insertIntoPaymentsDB(paymentData));
 }
 //Load employees registered on the Clover system.
 function loadEmployees(){
