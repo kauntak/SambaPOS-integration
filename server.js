@@ -2,12 +2,15 @@ module.exports = {start};
 
 
 const http = require('http');
+const express = require('express');
+const app = express();
 const deliverect = require('./Deliverect');
 const samba = require('./Samba');
 const log = require('./log');
 const report = require('./report');
 
 const dotenv = require('dotenv');
+const { randomUUID } = require('crypto');
 dotenv.config();
 const listenPort = process.env.LISTEN_PORT;
 const hostname = 'localhost';
@@ -20,7 +23,30 @@ function writeToLog(content){
 //paired with ngrok server.
 //if url is /deliverect and method is post will call the deliverect process function
 //if url is /report and method is get, it will pull report data from SambaPOS
-async function start(){
+function start(){
+    writeToLog("Server Starting.\r\n\r\n\r\n");
+    app.use(express.json());
+    app.get("/reports", (req, res)=>{
+        writeToLog("ACCESSED FROM: " + JSON.stringify(req.headers, undefined, 2));
+        report.generateReport().then((html)=>{
+            res.send(html);
+        });
+    });
+    app.post("/deliverect", (req, res)=>{
+        writeToLog(req.body);
+        let orderId = randomUUID();
+        //deliverect.processDeliverect(req.body, orderId);
+        res.send(`{"posOrderId": "${orderId}"}`);
+    });
+
+
+    app.listen(listenPort,()=>{
+        writeToLog("Server started on port: " + listenPort);
+    });
+}
+
+
+/*async function start(){
 	writeToLog("Server Starting.\r\n\r\n\r\n");
 	http.createServer(async (req, res) => {
 		let {headers, method, url} = req;
@@ -54,4 +80,4 @@ async function start(){
 		res.end();
 	}).listen(listenPort, hostname, () => {writeToLog(`Server started on port ${listenPort}`)});
 	return;
-}
+}*/
