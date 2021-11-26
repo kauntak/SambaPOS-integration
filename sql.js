@@ -4,6 +4,7 @@ const Connection = require('tedious').Connection;
 const Request = require('tedious').Request;
 const TYPES = require('tedious').TYPES;
 const log = require('./log');
+const report = require('./report');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -27,7 +28,7 @@ const config = {
         port: parseInt(`${Dport?Dport:1433}`,10),
         database: dbase
     }
-  }
+};
 let connection;
 
 //write to log for SQL
@@ -182,29 +183,11 @@ function getHoldOrdersTotal(){
 			connection.close();
 			resolve(res);
 		}}).on('row', col =>{
-			res.push(processHoldOrderData(col[0].value, col[1].value));
+			res.push(report.processHoldOrderData(col[0].value, col[1].value));
 		});
 		connection.execSql(Rqst);
 	});
 }
-
-function processHoldOrderData(time, amount){
-	var t = time.substr(6).split(".");
-	t[1] = addTrailingZeroes(parseFloat(("0." + (t[1]?t[1]:"0"))) * 60);
-	amount = (amount + "").split(".");
-	//console.log(t, amount);
-	return [t.join(":"),`$${amount[0]}.${addTrailingZeroes(amount[1])}`];
-}
-
-function addTrailingZeroes(number){
-	if(!number)
-		number = 0;
-	number = number + "";
-	while(number.length < 2)
-		number += "0";
-	return number;
-}
-
 
 function getSDSData(){
 	let qry = `SELECT Content
@@ -224,8 +207,7 @@ function getSDSData(){
 			connection.close();
 			resolve(res);
 		}}).on('row', col =>{
-			res.push((col[0].value.replace(/(\r\n)/g,"</br>")));
-			console.log(col);
+			res.push(report.changeTaskToHTML(col[0].value));
 		});
 		connection.execSql(Rqst);
 	});
