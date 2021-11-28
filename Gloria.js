@@ -36,7 +36,8 @@ async function start(testing){
         isTest = true;
 	writeToLog("Gloria Started.\r\n\r\n\r\n");
     while(true){
-	    await loop();
+        try{await loop();}
+        catch(err){if(err) writeToErrorLog(err)}
         await new Promise(r => setTimeout(r, timeout));
         if(isTest) break;
     }

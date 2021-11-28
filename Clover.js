@@ -75,7 +75,8 @@ async function start(testing){
 	writeToLog("Clover Started.\r\n\r\n\r\n");
     await loadEmployees();
     while(true){
-        await loop();
+        try{await loop();}
+        catch(err){if(err) writeToErrorLog(err)}
         await new Promise(r => setTimeout(r, timeout));
     }
 
