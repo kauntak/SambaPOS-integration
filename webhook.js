@@ -7,7 +7,7 @@ dotenv.config();
 
 const ngrok_options = {
 	addr: process.env.NGROK_PORT,
-	auth: process.env.NGROK_AUTH,
+	//auth: process.env.NGROK_AUTH,
 	subdomain: process.env.NGROK_SUBDOMAIN,
 	authtoken: process.env.AUTH_TOKEN
 };
