@@ -1,9 +1,6 @@
 module.exports = {start};
 
 
-const http = require('http');
-const express = require('express');
-const app = express();
 const deliverect = require('./Deliverect');
 const samba = require('./Samba');
 const log = require('./log');
@@ -11,11 +8,22 @@ const report = require('./report');
 
 const dotenv = require('dotenv');
 const { randomUUID } = require('crypto');
+const { response } = require('express');
+const session = require('express-session');
+const cookieParse = require('cookie-parser');
+const bodyParser = require('body-parser');
+const path = require('path');
+const express = require('express');
+
+const app = express();
 dotenv.config();
 const listenPort = process.env.LISTEN_PORT;
 const hostname = 'localhost';
 
 const whiteList = ["35.241.160.154", "35.241.180.107", "104.199.82.58", "34.79.19.218"];
+
+const userName = process.env.AUTH_USER;
+const password = process.env.AUTH_PWD;
 
 //writing to log for the server.
 function writeToLog(content){
@@ -32,11 +40,31 @@ function writeToErrorLog(content){
 function start(){
     writeToLog("Server Starting.\r\n\r\n\r\n");
     app.use(express.json());
+    app.use(bodyParser.urlencoded({extended: true}));
+    //app.use(cookieParser());
+    app.use(session({
+        secret:'secret',
+        resave: true,
+        saveUninitialized: true
+    }));
+    app.get("/", (req,res) => {
+        res.sendFile(__dirname + '/public/login.html');
+    });
     app.get("/reports", (req, res)=>{
         writeToLog("ACCESSED FROM: " + JSON.stringify(req.headers, undefined, 2));
         report.generateReport().then((html)=>{
             res.send(html);
         });
+    });
+
+    app.post("/auth", (req, res) => {
+        console.log(res);
+        let user = req.body.username == userName;
+        let pwd = req.body.password == password;
+        if(user && pwd){
+
+        }
+        else response.send('Incorrect Username and/or password!');
     });
     app.post("/deliverect", (req, res)=>{
         writeToLog(req.headers);
