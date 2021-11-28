@@ -49,8 +49,7 @@ function connect(type, data){
 				writeToLog('Connected to DB.');
 				switch(type){
 					case "Clover":
-						let res = insertIntoPaymentsDB(data);
-						resolve(res)
+						resolve(insertIntoPaymentsDB(data));
 						break;
 					case "getHoldReportData":
 						resolve(getHoldOrdersTotal());
@@ -110,7 +109,7 @@ function insertIntoPaymentsDB(paymentData){
 			if(err){
 				reject(err);
 			} else {
-				writeToLog(`${rowCount} row(s) insesrted into DeliverectOrders`);
+				writeToLog(`${rowCount} row(s) insesrted into CreditTerminalTransactions`);
 				resolve(true);
 				connection.close();
 			}});
@@ -162,8 +161,8 @@ function insertIntoDeliverectDB(data){
 				reject(err);
 			} else {
 				writeToLog(`${rowCount} row(s) insesrted into DeliverectOrders`);
-				resolve(true);
 				connection.close();
+				resolve(true);
 			}});
 		connection.execSql(Rqst);
 	}).catch(err => {
