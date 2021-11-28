@@ -12,6 +12,8 @@ const gloriaFoodKey = process.env.GLORIAFOOD_KEY;
 const ticketType =  process.env.GLORIAFOOD_TICKET_TYPE;
 const customerEntityType = 'Customers';
 const timeout = 2000;
+//minutes x 60000 milliseconds(1minute)
+const closedTimeout =  30 * 60000;
 
 var createTicketQry = "";
 
@@ -36,10 +38,14 @@ async function start(testing){
         isTest = true;
 	writeToLog("Gloria Started.\r\n\r\n\r\n");
     while(true){
-        try{await loop();}
-        catch(err){if(err) writeToErrorLog(err)}
-        await new Promise(r => setTimeout(r, timeout));
-        if(isTest) break;
+        if(samba.isOpen()){
+            try{await loop();}
+            catch(err){if(err) writeToErrorLog(err)}
+            await new Promise(r => setTimeout(r, timeout));
+            if(isTest) break;
+        }
+        else
+            await new Promise(r => setTimeout(r, timeout * 30));
     }
 }
 

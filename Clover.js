@@ -75,9 +75,14 @@ async function start(testing){
 	writeToLog("Clover Started.\r\n\r\n\r\n");
     await loadEmployees();
     while(true){
-        try{await loop();}
-        catch(err){if(err) writeToErrorLog(err)}
-        await new Promise(r => setTimeout(r, timeout));
+		if(samba.isOpen()){
+			try{await loop();}
+			catch(err){if(err) writeToErrorLog(err)}
+			await new Promise(r => setTimeout(r, timeout));
+		}
+		else
+			await new  Promise(r => setTimeout(r, timeout * 5));
+		
     }
 
 }

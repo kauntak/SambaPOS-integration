@@ -1,4 +1,4 @@
-module.exports = {Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket};
+module.exports = {isOpen,Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket};
 
 const request = require('request');
 const querystring = require('querystring');
@@ -26,6 +26,22 @@ const departmentName = 'Takeout';
 var accessToken = undefined;
 var accessTokenExpires = '';
 
+const openTime = "10:30";
+const closeTime = "22:00";
+
+function isOpen(){
+    var date = new Date();
+    var open = getTime(openTime);
+    var close = getTime(closeTime);
+    if(date > open && date < close)
+        return true;
+    return false;
+}
+
+function getTime(time){
+    time = time.split(":");
+    return new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), time[0], time[1]);
+}
 
 const isTest = false;
 
