@@ -8,7 +8,7 @@ const font = 'font-family: Arial, Helvetica, sans-serif;';
 const style = `
         <style>
             /*Mobile*/
-            @medio only screen and (max-width:480px){
+            @media only screen and (max-width:480px){
                 width:480px;
             }
             td.display {
