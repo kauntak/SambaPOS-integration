@@ -101,7 +101,7 @@ async function loop(){
 		return;
 	}
 	else{
-		let date = await samba.getCloverLastRead(delay + (timeout / 60000) + 4320);
+		let date = await samba.getCloverLastRead(delay + (timeout / 60000));
 		let paymentOptions = `filter=createdTime>=${date.getTime()}`;
 		paymentData.push(...processData(await getFromClover("payments", paymentOptions)));
 		if(paymentData.length == 0 ){
@@ -109,7 +109,6 @@ async function loop(){
 			return;
 		}
 		writeToLog("Payments: " + JSON.stringify(paymentData, undefined, 2));
-		console.log(paymentData);
 	}
 	let tickets = await samba.getOpenTakeoutTickets();
 	writeToLog("Tickets: " + JSON.stringify(tickets, undefined, 2));
@@ -150,12 +149,10 @@ async function loop(){
 			}
 		}
 		if(paidCount < unpaid.length){
-			console.log(unpaid);
 			for(let i = tickets.length - 1; i > 0; i--){
 				let j = i - 1;
 				while(j >= 0){
 					let amount = round(tickets[i].remainingAmount + tickets[j].remainingAmount, 2);
-					console.log(amount, i, j);
 					let index = unpaid.findIndex(payment => payment.amount == amount && !payment.paid);
 					if(index != -1){
                         await samba.payTicket(terminalId, tickets[i].id, tickets[i].remainingAmount, paymentType);
