@@ -44,10 +44,15 @@ function start(){
         res.send(`{"posOrderId": "${orderId}"}`);
     });
 
-
+    
+    app.use((req,res,next)=>{
+        res.status(404).end("404 Page Not Found. You found a non-page!");
+    });
+    
     app.listen(listenPort,()=>{
         writeToLog("Server started on port: " + listenPort);
     });
+
 }
 
 
