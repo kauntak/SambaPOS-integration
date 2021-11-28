@@ -55,8 +55,14 @@ function connect(type, data){
 					case "getHoldReportData":
 						resolve(getHoldOrdersTotal());
 						break;
-					case "getSdsData":
-						resolve(getSDSData());
+					case "getDisplayData":
+						resolve(getDisplayData());
+						break;
+					case "getOrderTotals":
+						resolve(getCurrentOrderTotals());
+						break;
+					case "getCurrentTotals":
+						resolve(getCurrentTotals());
 						break;
 				}
 			}
@@ -189,14 +195,12 @@ function getHoldOrdersTotal(){
 	});
 }
 
-function getSDSData(){
-	let qry = `SELECT Content
-	FROM [SambaPOS5].[dbo].[Tasks]		
-	WHERE TaskTypeId = 6
-	AND Completed = 0
-	order By EndDate`;
+function getCurrentOrderTotals(){
+	let qry = `SELECT Value
+	FROM [SambaPOS5].[dbo].[ProgramSettingValues]		
+	WHERE Name like 'ordersTotal'`;
 	return new Promise((resolve, reject) => {
-		let res = [];
+		let res;
 		Rqst = new Request(qry,(err,rowCount,rows) => {
 		if(err){
 			writeToLog(qry+ "\r\n" + err);
@@ -207,7 +211,61 @@ function getSDSData(){
 			connection.close();
 			resolve(res);
 		}}).on('row', col =>{
-			res.push(report.changeTaskToHTML(col[0].value));
+			res = col[0].value;
+		});
+		connection.execSql(Rqst);
+	});
+}
+
+
+function getDisplayData(){
+	let qry = `SELECT SUBSTRING(TaskTypes.Name,1,1), Content
+		FROM [SambaPOS5].[dbo].[Tasks]
+		JOIN TaskTypes ON TaskTypes.Id = TaskTypeId
+		WHERE TaskTypeId IN (SELECT Id FROM TaskTypes WHERE SubOf IS NULL AND Name like '_DSTask')
+		AND Completed = 0
+		ORDER BY TaskTypeId,Tasks.EndDate`;
+	return new Promise((resolve, reject) => {
+		let res = {};
+		Rqst = new Request(qry,(err,rowCount,rows) => {
+		if(err){
+			writeToLog(qry+ "\r\n" + err);
+			connection.close();
+			reject(err);
+		} else {
+			writeToLog(`Result: ${res}`);
+			connection.close();
+			resolve(res);
+		}}).on('row', col =>{
+			if(!res[col[0].value])
+				res[col[0].value] = [];
+			res[col[0].value].push(report.changeTaskToHTML(col[1].value));
+		});
+		connection.execSql(Rqst);
+	});
+}
+
+function getCurrentTotals(){
+	let qry = `SELECT Name,SUM(Amount) as Total,COUNT(Amount) as Count
+	FROM Payments
+	WHERE CAST(Payments.Date as date) = CAST(GETDATE() as date)
+	GROUP BY Name`;
+	return new Promise((resolve, reject) => {
+		let res = {};
+		Rqst = new Request(qry,(err,rowCount,rows) => {
+		if(err){
+			writeToLog(qry+ "\r\n" + err);
+			connection.close();
+			reject(err);
+		} else {
+			writeToLog(`Result: ${JSON.stringify(res, undefined, 2)}`);
+			connection.close();
+			resolve(res);
+		}}).on('row', col =>{
+			console.log(col);
+			res[col[0].value] = {};
+			res[col[0].value][col[1].metadata.colName] = col[1].value;
+			res[col[0].value][col[2].metadata.colName] = col[2].value;
 		});
 		connection.execSql(Rqst);
 	});
