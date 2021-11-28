@@ -161,7 +161,7 @@ async function loop(){
 	}
     await samba.closeTerminal(terminalId);
 	await samba.setCloverLastRead(readDate);
-    await sql.connect(sql.insertIntoPaymentsDB(paymentData));
+    await sql.connect("Clover", paymentData);
 }
 //Load employees registered on the Clover system.
 function loadEmployees(){
