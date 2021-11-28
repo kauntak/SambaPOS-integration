@@ -14,11 +14,16 @@ const { randomUUID } = require('crypto');
 dotenv.config();
 const listenPort = process.env.LISTEN_PORT;
 const hostname = 'localhost';
+
+
 //writing to log for the server.
 function writeToLog(content){
     log.write("Server", content);
 }
-
+//write to log for Server errors
+function writeToErrorLog(content){
+	log.write("Server_Error", content);
+}
 //main function to start server.
 //paired with ngrok server.
 //if url is /deliverect and method is post will call the deliverect process function

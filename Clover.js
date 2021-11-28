@@ -60,6 +60,11 @@ function writeToLog(content){
     log.write("Clover", content);
 }
 
+function writeToErrorLog(content){
+	log.write("Clover_Error", content);
+}
+
+
 //main function to run the Clover integration.
 //Will run an infinite loop, running the function loop(), and will pause for "timeout" milliseconds
 async function start(testing){

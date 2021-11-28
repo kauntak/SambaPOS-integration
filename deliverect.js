@@ -42,6 +42,10 @@ function writeToLog(content){
     log.write("Deliverect", content);
 }
 
+//write to log for Deliverect errors
+function writeToErrorLog(content){
+	log.write("Deliverect_Error", content);
+}
 
 async function start(testing){
     if(testing)

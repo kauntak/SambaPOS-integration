@@ -31,9 +31,14 @@ const config = {
 };
 let connection;
 
-//write to log for SQL
+//write to log for SQL Query and results
 function writeToLog(content){
     log.write("SQL", content);
+}
+
+//write to log for SQL errors
+function writeToErrorLog(content){
+	log.write("SQL_Error", content);
 }
 
 //connecting to database.
@@ -43,7 +48,6 @@ function connect(type, data){
 		connection.on('connect', err => {
 			writeToLog("Start connection.");
 			if (err) {
-				writeToLog("Error: " + err);
 				reject(err);
 			} else {
 				writeToLog('Connected to DB.');
@@ -67,6 +71,8 @@ function connect(type, data){
 			}
 		});
 		connection.connect();
+	}).catch(err => {
+		writeToErrorLog("Type:" + type + "\r\nData:" + JSON.stringify(data));
 	});
 }
 
@@ -115,7 +121,7 @@ function insertIntoPaymentsDB(paymentData){
 			}});
 		connection.execSql(Rqst);
 	}).catch(err => {
-		writeToLog(qry+ "\r\n" + err);
+		writeToErrorLog("QUERY:" + qry + "\r\nERROR:" + err);
 	});
 }
 
@@ -158,6 +164,7 @@ function insertIntoDeliverectDB(data){
 	return new Promise((resolve, reject)=>{
 		Rqst = new Request(qry,(err,rowCount,rows) => {
 			if(err){
+				connection.close();
 				reject(err);
 			} else {
 				writeToLog(`${rowCount} row(s) insesrted into DeliverectOrders`);
@@ -166,7 +173,7 @@ function insertIntoDeliverectDB(data){
 			}});
 		connection.execSql(Rqst);
 	}).catch(err => {
-		writeToLog(qry+ "\r\n" + err);
+		writeToErrorLog("QUERY:" + qry + "\r\nERROR:" + err);
 	});
 }
 
@@ -180,7 +187,6 @@ function getHoldOrdersTotal(){
 		let res = [];
 		Rqst = new Request(qry,(err,rowCount,rows) => {
 		if(err){
-			writeToLog(qry+ "\r\n" + err);
 			connection.close();
 			reject(err);
 		} else {
@@ -191,7 +197,9 @@ function getHoldOrdersTotal(){
 			res.push(report.processHoldOrderData(col[0].value, col[1].value));
 		});
 		connection.execSql(Rqst);
-	});
+	}).catch(err => {
+		writeToErrorLog(qry+ "\r\n" + err);
+	});;
 }
 
 function getCurrentOrderTotals(){
@@ -202,7 +210,6 @@ function getCurrentOrderTotals(){
 		let res;
 		Rqst = new Request(qry,(err,rowCount,rows) => {
 		if(err){
-			writeToLog(qry+ "\r\n" + err);
 			connection.close();
 			reject(err);
 		} else {
@@ -213,6 +220,8 @@ function getCurrentOrderTotals(){
 			res = col[0].value;
 		});
 		connection.execSql(Rqst);
+	}).catch(err => {
+		writeToErrorLog("QUERY:" + qry + "\r\nERROR:" + err);
 	});
 }
 
@@ -228,7 +237,6 @@ function getDisplayData(){
 		let res = {};
 		Rqst = new Request(qry,(err,rowCount,rows) => {
 		if(err){
-			writeToLog(qry+ "\r\n" + err);
 			connection.close();
 			reject(err);
 		} else {
@@ -241,6 +249,8 @@ function getDisplayData(){
 			res[col[0].value].push(report.changeTaskToHTML(col[1].value));
 		});
 		connection.execSql(Rqst);
+	}).catch(err => {
+		writeToErrorLog("QUERY:" + qry + "\r\nERROR:" + err);
 	});
 }
 
@@ -253,7 +263,6 @@ function getCurrentTotals(){
 		let res = {};
 		Rqst = new Request(qry,(err,rowCount,rows) => {
 		if(err){
-			writeToLog(qry+ "\r\n" + err);
 			connection.close();
 			reject(err);
 		} else {
@@ -267,5 +276,7 @@ function getCurrentTotals(){
 			res[col[0].value][col[2].metadata.colName] = col[2].value;
 		});
 		connection.execSql(Rqst);
+	}).catch(err => {
+		writeToErrorLog("QUERY:" + qry + "\r\nERROR:" + err);
 	});
 }

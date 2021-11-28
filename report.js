@@ -150,12 +150,14 @@ const style = `
         </style>
 `;
 
-const noReports = `<p style="font-size:20px">Nothing to see here!</p>`;
-
 function writeToLog(content){
     log.write("report", content);
 }
 
+
+function writeToErrorLog(content){
+	log.write("Clover_Error", content);
+}
 
 async function generateReport(){
     let reports = await getReports();
@@ -187,7 +189,9 @@ function getCollapsableSections(data){
     let returnHtml = "";
     let count = 1;
     let list = ["total", "hold", "S", "K", "D"]
+    console.log(data);
     for(let i in list){
+        if(!(data[list[i]])) continue;
         returnHtml +=`
             <section class="collapsable">
                 <input type="checkbox" name="collapse" id="collapseCheckBox${count}">
@@ -280,7 +284,8 @@ function buildCurrentTotalTable(data){
         isEmpty = false;
         break;
     }
-    if(isEmpty) return noReports;
+    if(isEmpty) return `<p>Total  $0.00</p>`;
+    ;
     let options = {th: `colspan="2"`};
     let nameOptions = {td:`class="totalNameTd"`};
     let valueOptions = {td:`class="totalValueTd"`};

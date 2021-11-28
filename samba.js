@@ -34,6 +34,10 @@ function writeToLog(content){
     log.write("Samba",content);
 }
 
+//write to log for Samba errors
+function writeToErrorLog(content){
+	log.write("Samba_Error", content);
+}
 
 //Retreice auth token and valid date from Samba.
 async function Authorize() {
@@ -54,7 +58,7 @@ async function Authorize() {
     return new Promise((resolve, reject)=>{
         request(reqData, (err, res, body) =>{
             if(err){
-                writeToLog("Error while Authorizing: " + err.msg);
+                writeToErrorLog("Error while Authorizing: " + err.msg);
                 reject();
             }
             else if(res.statusCode === 400){
@@ -68,7 +72,7 @@ async function Authorize() {
                 resolve();
             }
         });
-    }).catch(err => {writeToLog("Request Data: " + JSON.stringify(reqData, undefined, 2));});
+    }).catch(err => {writeToErrorLog("Request Data: " + JSON.stringify(reqData, undefined, 2));});
 }
 
 //GraphiQL query

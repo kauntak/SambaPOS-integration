@@ -25,6 +25,10 @@ var lastQryCompleted = true;
 function writeToLog(content){
     log.write("Gloria", content);
 }
+//write to log for Gloria errors
+function writeToErrorLog(content){
+	log.write("Gloria_Error", content);
+}
 
 //starting GloriaFood integration app. will run an infinite loop, running the "loop" function
 async function start(testing){
@@ -78,7 +82,7 @@ async function readTickets() {
             }
         });	
     }).catch(err =>{
-        writeToLog("ERROR: " + err.message);
+        writeToErrorLog("ERROR: " + err.message);
         return false;
     });
 }
