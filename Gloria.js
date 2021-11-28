@@ -71,7 +71,6 @@ async function readTickets() {
 	};
 	if(isTest){
 		var body = testBody;
-		body = body.replace(/\n/g, "   ").replace(/\\/g, "\\\\");
 		return JSON.parse(body);
 	}
 	return new Promise((resolve, reject) =>{
@@ -79,7 +78,6 @@ async function readTickets() {
             if (!err){
                 if(body != `{"count":0,"orders":[]}`)
                    writeToLog(`Received:\r\n${body}`);
-                body = body.replace(/\n/g, "    ");
                 lastQryCompleted = false;
                 lastBody = JSON.parse(body);
                 resolve(JSON.parse(body));
@@ -141,7 +139,7 @@ async function processOrder(order) {
         ]`
     };
 	if(order.instructions)
-		order.instructions = order.instructions.replace(/\\"/g, '\\\\"');
+		order.instructions = processComment(order.instructions);
     let sambaCustomer = await samba.loadCustomer(customer);
 	var services = order.items
 	   .filter(x => x.type === 'tip' || x.type === 'delivery_fee' || x.type === 'promo_cart')
@@ -174,10 +172,15 @@ function processItem(item) {
         type: item.type,
         price: item.price,
         quantity: item.quantity,
-        instructions: item.instructions,
+        instructions: processComment(item.instructions),
         options: item.options.filter(x => x.type === 'option').map(x => { return { group_name: x.group_name, name: x.name, quantity: x.quantity, price: x.price } }),
         portions: item.options.filter(x => x.type === 'size').map(x => { return { name: x.name, price: x.price}}),
 		groupCode: ""
     };
     return result;
+}
+
+//removed unwanted user input
+function processComment(comment){
+    return comment.replace(/"/g, "'").replace(/\n/g, "  ").replace(/~/g, "-");
 }
