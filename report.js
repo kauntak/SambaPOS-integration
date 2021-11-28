@@ -291,7 +291,9 @@ function buildCurrentTotalTable(data){
         let valCol = [];
         for(let j in data[i]){
             nameCol.push([j]);
-            valCol.push(["$"+data[i][j]]);
+            if(j == "Total")
+                data[i][j] = "$"+data[i][j];
+            valCol.push([data[i][j]]);
         }
         nameCol = buildTable(6,undefined,nameCol,nameOptions);
         console.log(nameCol);
