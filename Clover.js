@@ -95,21 +95,14 @@ async function start(testing){
 //Will set the database value for last read time to current time
 //Insert payment data into database.
 async function loop(){
-	if(isTest){
-		paymentData = testData;
-		await sql.connect("Hold Total Report");
+	let date = await samba.getCloverLastRead(delay + (timeout / 60000) + 120);
+	let paymentOptions = `filter=createdTime>=${date.getTime()}`;
+	paymentData.push(...processData(await getFromClover("payments", paymentOptions)));
+	if(paymentData.length == 0 ){
+		await samba.setCloverLastRead();
 		return;
 	}
-	else{
-		let date = await samba.getCloverLastRead(delay + (timeout / 60000));
-		let paymentOptions = `filter=createdTime>=${date.getTime()}`;
-		paymentData.push(...processData(await getFromClover("payments", paymentOptions)));
-		if(paymentData.length == 0 ){
-			await samba.setCloverLastRead();
-			return;
-		}
-		writeToLog("Payments: " + JSON.stringify(paymentData, undefined, 2));
-	}
+	writeToLog("Payments: " + JSON.stringify(paymentData, undefined, 2));
 	let tickets = await samba.getOpenTakeoutTickets();
 	writeToLog("Tickets: " + JSON.stringify(tickets, undefined, 2));
 	let terminalId = await samba.openTerminal();
