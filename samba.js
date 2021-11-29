@@ -33,7 +33,7 @@ function isOpen(){
     var date = new Date();
     var open = getTime(openTime);
     var close = getTime(closeTime);
-    if(date > open && date < close)
+    if(date.getDay() != 1 && date > open && date < close)
         return true;
     return false;
 }
