@@ -188,8 +188,7 @@ async function getReports(){
 function getCollapsableSections(data){
     let returnHtml = "";
     let count = 1;
-    let list = ["total", "hold", "S", "K", "D"]
-    console.log(data);
+    let list = ["total", "hold", "S", "K", "D"];
     for(let i in list){
         if(!(data[list[i]])) continue;
         returnHtml +=`
@@ -284,30 +283,37 @@ function buildCurrentTotalTable(data){
         isEmpty = false;
         break;
     }
-    if(isEmpty) return `<p>Total  $0.00</p>`;
-    ;
+    //if(isEmpty) return `<p>Total  $0.00</p>`;
+    
     let options = {th: `colspan="2"`};
     let nameOptions = {td:`class="totalNameTd"`};
     let valueOptions = {td:`class="totalValueTd"`};
     let table = [];
+    let grandTotalAmount = 0;
+    let grandTotalCount = 0;
     for(let i in data){
         let headers = [i];
         let nameCol = [];
         let valCol = [];
         for(let j in data[i]){
             nameCol.push([j]);
-            if(j == "Total")
+            if(j == "Total"){
+                grandTotalAmount += parseFloat(data[i][j]);
                 data[i][j] = "$"+data[i][j];
+            } 
+            else grandTotalCount += parseInt(data[i][j]);
             valCol.push([data[i][j]]);
         }
         nameCol = buildTable(6,undefined,nameCol,nameOptions);
-        console.log(nameCol);
         valCol = buildTable(6,undefined,valCol,valueOptions);
-        console.log(valCol);
         let t = buildTable(5,headers,[[nameCol,valCol]], options);
-        console.log(t);
         table.push(t);
     }
+    let headers = ["Grand Total"];
+    let nameCol = [buildTable(6, undefined, [["Total"], ["Count"]], nameOptions)];
+    let valCol = [buildTable(6, undefined, [["$" + grandTotalAmount], [grandTotalCount]], valueOptions)];
+    let t = buildTable(5, headers, [[nameCol, valCol]], options);
+    table.push(t);
     return buildTable(4, undefined, [table], undefined);
 }
 
@@ -372,8 +378,6 @@ function processHoldOrderData(time, amount){
 	amount = (amount + "").split(".");
     amount = `${amount[0]}.${addTrailingZeroes(amount[1])}`;
     amount = getColoredHoldPrice(amount);
-        
-	//console.log(t, amount);
 	return [t.join(":"),amount];
 }
 
