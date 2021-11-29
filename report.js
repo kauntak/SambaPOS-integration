@@ -392,13 +392,13 @@ function addTrailingZeroes(number){
 }
 
 function getColoredHoldPrice(input){
-    let color = "gray";
     let amount = parseFloat(input);
-    if(amount > 0 && amount <= 250) color = "white";
-    else if(amount > 250 && amount <= 500) color = "yellow";
-    else if(amount > 500 && amount <= 750) color = "orange";
-    else if(amount > 750 && amount <= 1000) color = "red";
-    else if(amount > 1000) color = "darkred";
+    if(amount == 0) var color = "gray";
+    else if(amount <= 250) color = "white";
+    else if(amount <= 500) color = "yellow";
+    else if(amount <= 750) color = "orange";
+    else if(amount <= 1000) color = "tomato";
+    else if(amount > 1000) color = "firebrick";
     return `<code style="color:${color}; ${font}">$${input}</code>`;
 }
 
