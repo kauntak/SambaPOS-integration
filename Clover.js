@@ -95,22 +95,14 @@ async function start(testing){
 //Will set the database value for last read time to current time
 //Insert payment data into database.
 async function loop(){
-	if(isTest){
-		paymentData = testData;
-		await sql.connect("Hold Total Report");
+	let date = await samba.getCloverLastRead(delay + (timeout / 60000) + 120);
+	let paymentOptions = `filter=createdTime>=${date.getTime()}`;
+	paymentData.push(...processData(await getFromClover("payments", paymentOptions)));
+	if(paymentData.length == 0 ){
+		await samba.setCloverLastRead();
 		return;
 	}
-	else{
-		let date = await samba.getCloverLastRead(delay + (timeout / 60000) + 4320);
-		let paymentOptions = `filter=createdTime>=${date.getTime()}`;
-		paymentData.push(...processData(await getFromClover("payments", paymentOptions)));
-		if(paymentData.length == 0 ){
-			await samba.setCloverLastRead();
-			return;
-		}
-		writeToLog("Payments: " + JSON.stringify(paymentData, undefined, 2));
-		console.log(paymentData);
-	}
+	writeToLog("Payments: " + JSON.stringify(paymentData, undefined, 2));
 	let tickets = await samba.getOpenTakeoutTickets();
 	writeToLog("Tickets: " + JSON.stringify(tickets, undefined, 2));
 	let terminalId = await samba.openTerminal();
@@ -150,12 +142,10 @@ async function loop(){
 			}
 		}
 		if(paidCount < unpaid.length){
-			console.log(unpaid);
 			for(let i = tickets.length - 1; i > 0; i--){
 				let j = i - 1;
 				while(j >= 0){
 					let amount = round(tickets[i].remainingAmount + tickets[j].remainingAmount, 2);
-					console.log(amount, i, j);
 					let index = unpaid.findIndex(payment => payment.amount == amount && !payment.paid);
 					if(index != -1){
                         await samba.payTicket(terminalId, tickets[i].id, tickets[i].remainingAmount, paymentType);

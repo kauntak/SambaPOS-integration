@@ -18,7 +18,7 @@ const closedTimeout =  30 * 60000;
 var createTicketQry = "";
 
 var isTest = false;
-var testBody = `{"count":1,"orders":[{"instructions":"","coupons":[],"tax_list":[{"type":"item","value":4.61,"rate":0.05}],"missed_reason":null,"billing_details":null,"fulfillment_option":null,"table_number":null,"id":407129522,"total_price":96.81,"sub_total_price":92.2,"tax_value":4.61,"persons":0,"latitude":null,"longitude":null,"client_first_name":"Redacted","client_last_name":"Redacted","client_email":"redacted@redacted.com","client_phone":"+5555555755","restaurant_name":"Big Catch Sushi Bar","currency":"CAD","type":"pickup","status":"accepted","source":"mobile_web","pin_skipped":false,"accepted_at":"2021-11-25T00:27:38.000Z","tax_type":"NET","tax_name":"GST","fulfill_at":"2021-11-26T00:52:38.000Z","client_language":"en","integration_payment_provider":null,"integration_payment_amount":0,"reference":null,"restaurant_id":119850,"client_id":10123236,"updated_at":"2021-11-25T00:27:38.000Z","restaurant_phone":"+1 403 708 5555","restaurant_timezone":"America/Edmonton","card_type":null,"used_payment_methods":["CARD"],"company_account_id":80000,"pos_system_id":30221,"restaurant_key":"redacted","restaurant_country":"Canada","restaurant_city":"Calgary","restaurant_state":"Alberta","restaurant_zipcode":"T2V0R6","restaurant_street":"8835 Macleod Tr SW #130","restaurant_latitude":"50.975124689951656","restaurant_longitude":"-114.07356644351654","client_marketing_consent":true,"restaurant_token":"redacted","gateway_transaction_id":null,"gateway_type":null,"api_version":2,"payment":"CARD","for_later":false,"client_address":null,"client_address_parts":null,"items":[{"id":557930929,"name":"Sprout ・ 2 - 3ppl","total_item_price":52.75,"price":52.75,"quantity":1,"instructions":"","type":"item","type_id":3247017,"tax_rate":0.05,"tax_value":2.6375,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[{"id":500559353,"name":"Atlantic Salmon","price":0,"group_name":"Sprout Platter Salmon Type","quantity":1,"type":"option","type_id":9691825}]},{"id":557931549,"name":"Iron Goddess","total_item_price":16.45,"price":16.45,"quantity":1,"instructions":"","type":"item","type_id":3247109,"tax_rate":0.05,"tax_value":0.8225,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[]},{"id":557932227,"name":"Jupiter Rain","total_item_price":16.25,"price":16.25,"quantity":1,"instructions":"","type":"item","type_id":3247145,"tax_rate":0.05,"tax_value":0.8125,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[]},{"id":557933054,"name":"Crispy Gyoza","total_item_price":6.75,"price":6.75,"quantity":1,"instructions":"","type":"item","type_id":3267616,"tax_rate":0.05,"tax_value":0.3375,"parent_id":null,"item_discount":0,"cart_discount_rate":0,"cart_discount":0,"tax_type":"NET","options":[]}]}]}`;
+var testBody = `{"count":0,"orders":[]}`;
 
 var lastBody;
 var lastQryCompleted = true;
@@ -71,7 +71,6 @@ async function readTickets() {
 	};
 	if(isTest){
 		var body = testBody;
-		body = body.replace(/\n/g, "   ").replace(/\\/g, "\\\\");
 		return JSON.parse(body);
 	}
 	return new Promise((resolve, reject) =>{
@@ -79,7 +78,6 @@ async function readTickets() {
             if (!err){
                 if(body != `{"count":0,"orders":[]}`)
                    writeToLog(`Received:\r\n${body}`);
-                body = body.replace(/\n/g, "    ");
                 lastQryCompleted = false;
                 lastBody = JSON.parse(body);
                 resolve(JSON.parse(body));
@@ -141,7 +139,7 @@ async function processOrder(order) {
         ]`
     };
 	if(order.instructions)
-		order.instructions = order.instructions.replace(/\\"/g, '\\\\"');
+		order.instructions = processComment(order.instructions);
     let sambaCustomer = await samba.loadCustomer(customer);
 	var services = order.items
 	   .filter(x => x.type === 'tip' || x.type === 'delivery_fee' || x.type === 'promo_cart')
@@ -174,10 +172,15 @@ function processItem(item) {
         type: item.type,
         price: item.price,
         quantity: item.quantity,
-        instructions: item.instructions,
+        instructions: processComment(item.instructions),
         options: item.options.filter(x => x.type === 'option').map(x => { return { group_name: x.group_name, name: x.name, quantity: x.quantity, price: x.price } }),
         portions: item.options.filter(x => x.type === 'size').map(x => { return { name: x.name, price: x.price}}),
 		groupCode: ""
     };
     return result;
+}
+
+//removed unwanted user input
+function processComment(comment){
+    return comment.replace(/"/g, "'").replace(/\n/g, "  ").replace(/~/g, "-");
 }
