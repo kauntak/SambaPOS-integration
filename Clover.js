@@ -75,7 +75,7 @@ async function start(testing){
 	writeToLog("Clover Started.\r\n\r\n\r\n");
     await loadEmployees();
     while(true){
-		if(samba.isOpen()){
+		if(samba.isOpen() || isTest){
 			try{await loop();}
 			catch(err){if(err) writeToErrorLog(err)}
 			await new Promise(r => setTimeout(r, timeout));
@@ -95,7 +95,7 @@ async function start(testing){
 //Will set the database value for last read time to current time
 //Insert payment data into database.
 async function loop(){
-	let date = await samba.getCloverLastRead(delay + (timeout / 60000) + 120);
+	let date = await samba.getCloverLastRead(delay + (timeout / 60000));
 	let paymentOptions = `filter=createdTime>=${date.getTime()}`;
 	paymentData.push(...processData(await getFromClover("payments", paymentOptions)));
 	if(paymentData.length == 0 ){
