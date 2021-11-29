@@ -283,7 +283,7 @@ function buildCurrentTotalTable(data){
         isEmpty = false;
         break;
     }
-    //if(isEmpty) return `<p>Total  $0.00</p>`;
+    if(isEmpty) return `<p>Total  $0.00</p>`;
     
     let options = {th: `colspan="2"`};
     let nameOptions = {td:`class="totalNameTd"`};
@@ -313,7 +313,7 @@ function buildCurrentTotalTable(data){
     let nameCol = [buildTable(6, undefined, [["Total"], ["Count"]], nameOptions)];
     let valCol = [buildTable(6, undefined, [["$" + grandTotalAmount], [grandTotalCount]], valueOptions)];
     let t = buildTable(5, headers, [[nameCol, valCol]], options);
-    table.push(t);
+    table.unshift(t);
     return buildTable(4, undefined, [table], undefined);
 }
 
