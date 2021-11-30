@@ -1,3 +1,5 @@
+//Will Poll Clover for new payments, and settle appropriate tickets in SambaPOS
+
 module.exports = {start};
 
 const request = require('request');
@@ -13,7 +15,7 @@ const paymentType = process.env.CLOVER_PAYMENT_TYPE;
 //how long to pause between loop iteration
 //minutes x 60000 milliseconds(1minute)
 const timeout = 6 * 60000;
-//How many minute delay to have for closing paid tickets.
+//How many minutes to delay closing tickets.
 const delay = 10;
 
 let employeeList = [];
@@ -21,32 +23,40 @@ let paymentData = [];
 let readDate = new Date();
 let isTest = false;
 let testData = [{
-    id: '0T48JQ27FXCX6',
-    employee: { id: 'EXQJ6DDB7JPDR', name: 'Non' },
+    id: '0AT48JQ2B7FXCX6',
+    employee: { id: 'EXQJ6ED55DAB7JPDR', name: 'Non' },
     time: '2021-11-21 12:25:47',
     amount: 100.00,
     tipAmount: 10,
     result: 'SUCCESS'
   },
   {
-    id: 'Z8DNEWGN44F02',
-    employee: { id: 'EXQJ6DDB7JPDR', name: 'Non' },
+    id: 'Z8DNBEWGN44BF02',
+    employee: { id: 'EXQJ6ED55DAB7JPDR', name: 'Non' },
     time: '2021-11-21 12:24:24',
     amount: 82.18,
     tipAmount: 6.74,
     result: 'SUCCESS'
   },
   {
-    id: 'RXS3A2QPV8YB8',
-    employee: { id: 'EXQJ6DDB7JPDR', name: 'Non' },
+    id: 'RXSC3A2QBPV8YB8',
+    employee: { id: 'EXQJ6ED55DAB7JPDR', name: 'Non' },
     time: '2021-11-21 12:12:31',
     amount: 17.59,
     tipAmount: 19.93,
     result: 'SUCCESS'
   },
   {
-    id: '4HB4E6BTVRPN0',
-    employee: { id: 'EXQJ6DDB7JPDR', name: 'Non' },
+    id: 'RXSC3A2QBPV8YB82',
+    employee: { id: 'EXQJ6ED55DAB7JPDR', name: 'Non' },
+    time: '2021-11-21 12:12:31',
+    amount: 17.59,
+    tipAmount: 19.93,
+    result: 'FAILED'
+  },
+  {
+    id: '4HB4ER6BTVRAPN0',
+    employee: { id: 'EXQJ6ED55DAB7JPDR', name: 'Non' },
     time: '2021-11-21 12:10:54',
     amount: 215.67,
     tipAmount: 0,
@@ -59,17 +69,16 @@ let testData = [{
 function writeToLog(content){
     log.write("Clover", content);
 }
-
+//Writing to log for Clover Errors.
 function writeToErrorLog(content){
 	log.write("Clover_Error", content);
 }
 
 
 //main function to run the Clover integration.
-//Will run an infinite loop, running the function loop(), and will pause for "timeout" milliseconds
+//If store is open will run an infinite loop, running the function loop(), and will pause for "timeout" milliseconds
+//Otherwise will wait pause for "timeout" milliseconds * 5 to check if store is open again.
 async function start(testing){
-	//sql.connect(sql.retreiveHoldOrders());
-	//return;
     if(testing)
         isTest = true;
 	writeToLog("Clover Started.\r\n\r\n\r\n");
@@ -107,7 +116,7 @@ async function loop(){
 	writeToLog("Tickets: " + JSON.stringify(tickets, undefined, 2));
 	let terminalId = await samba.openTerminal();
 	let unpaid = [];
-	for(let i in paymentData) {
+	for(let i in paymentData) { //Will check if open tickets have same amount as paid amount, and close said ticket.
 		if(paymentData[i].paid) continue;
 		let index = tickets.findIndex(tk => tk.remainingAmount == paymentData[i].amount);
 		if(index == -1){
@@ -120,7 +129,7 @@ async function loop(){
 	}
 	if(unpaid.length > 0 && tickets.length > 0){
 		paidCount = 0;
-		for(let i in  unpaid){
+		for(let i in  unpaid){ //Will check if a ticket was paid with two different transaction and close appropriate ticket.
 			if(unpaid[i].paid) continue;
 			let j = parseInt(i) + 1;
 			while(j < unpaid.length){
@@ -144,7 +153,7 @@ async function loop(){
 		if(paidCount < unpaid.length){
 			for(let i = tickets.length - 1; i > 0; i--){
 				let j = i - 1;
-				while(j >= 0){
+				while(j >= 0){//Will check if a two ticket was paid with one transaction and close appropriate tickets.
 					let amount = round(tickets[i].remainingAmount + tickets[j].remainingAmount, 2);
 					let index = unpaid.findIndex(payment => payment.amount == amount && !payment.paid);
 					if(index != -1){
@@ -162,7 +171,7 @@ async function loop(){
 	}
     await samba.closeTerminal(terminalId);
 	await samba.setCloverLastRead(readDate);
-    await sql.connect("Clover", paymentData);
+    await sql.connect("Clover", paymentData);//inserting payment data into database.
 }
 //Load employees registered on the Clover system.
 function loadEmployees(){
@@ -232,7 +241,7 @@ function processData(payments){
 	return payments;
 }
 
-//function called when processing JSON.parse on data received from Clover
+//callback function for processing JSON.parse on data received from Clover
 function processCloverJSON(key,value)
 {
 	if(key == "amount" || key == "tipAmount")
@@ -242,7 +251,7 @@ function processCloverJSON(key,value)
 	return value;
 }
 
-//round any 
+//round any values to specified precision.(For floating point calculations.)
 function round(value, precision){
 	let multiplier = Math.pow(10, precision || 0);
 	return Math.round(value * multiplier) / multiplier;

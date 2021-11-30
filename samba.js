@@ -1,3 +1,7 @@
+//The "API" for SambaPOS for this app.
+
+
+
 module.exports = {isOpen,Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket};
 
 const request = require('request');
@@ -29,6 +33,9 @@ var accessTokenExpires = '';
 const openTime = "10:30";
 const closeTime = "22:00";
 
+
+//will check if store is open.
+//TODO:make a page that can edit the open times for each weekday so hours are not hard-coded.
 function isOpen(){
     var date = new Date();
     var open = getTime(openTime);
@@ -37,7 +44,8 @@ function isOpen(){
         return true;
     return false;
 }
-
+//get time according to input time.
+//TODO: this will change once open time editing page is created.
 function getTime(time){
     time = time.split(":");
     return new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), time[0], time[1]);
@@ -55,7 +63,7 @@ function writeToErrorLog(content){
 	log.write("Samba_Error", content);
 }
 
-//Retreice auth token and valid date from Samba.
+//Retreive auth token and valid date from Samba.
 async function Authorize() {
     accessToken = undefined;
 	writeToLog("Authorizing.");
@@ -141,7 +149,7 @@ function getCloverLastRead(delay){
         })
 }
 
-//Setting value for when clover was last polled
+//Setting value for when Clover was last polled
 function setCloverLastRead(date){
 	if(!date)
 		date = new Date();
@@ -151,6 +159,7 @@ function setCloverLastRead(date){
             return true;
         });
 }
+
 //Retreiving value for when deliverect was last polled
 function getDeliverectLastRead(delay){
     let qry = `{getGlobalSetting(name:"lastDeliverectCheck"){value}}`;
@@ -174,7 +183,7 @@ function setDeliverectLastRead(date){
         });
 }
 
-//Retreiving all currently all open takeout tickets
+//Retreiving all currently open takeout tickets
 function getOpenTakeoutTickets(){
     return getOpenTickets().then(tickets => {
         return tickets.filter(ticket =>
@@ -190,7 +199,7 @@ function getOpenDeliveryTickets(){
         });
 }
 
-//retreiving all currently open tickets.
+//retreiving all currently open tickets that are not on hold (state is "Unpaid"). sorted by pickup time.
 function getOpenTickets(){
 	return gql(getOpenTicketsScript())
 		.then(tickets =>{
@@ -334,20 +343,21 @@ function getCustomer(customer) {
 		});
 }
 
-//script for retreiving items from SambaPOS
+//Build GQL script for retreiving items from SambaPOS
 function getLoadItemsScript(items) {
     var part = items.map(item => `i${item.id}: getProduct(name:"${item.name}"){name, groupCode} `);
     return `{${part}}`;
 }
-
+//Building GQL script to get customer
 function getCustomerScript(customer) {
     return `{getEntity(type:"${customer.type}",name:"${customer.name}"){type,name,customData{name,value},states{stateName,state}}}`;
 }
 
+//Building GQL script to check if customer exists.
 function getIsEntityExistsScript(customer) {
     return `{isEntityExists(type:"${customer.type}",name:"${customer.name}")}`;
 }
-
+//Building GQL script to add a new customer.
 function getAddCustomerScript(customer) {
     return `
     mutation m{addEntity(entity:{
@@ -355,11 +365,11 @@ function getAddCustomerScript(customer) {
         {name}
     }`;
 }
-
+//Building GQL script to set new customer state to unconfrimed.
 function getNewCustomerStateScript(customer) {
     return `mutation m{updateEntityState(entityTypeName:"${customer.type}",entityName:"${customer.name}",state:"Unconfirmed",stateName:"CStatus"){name}}`;
 }
-
+//Build order tags to SambaPOS format.
 function GetOrderTags(order) {
     if (order.options) {
         var options = order.options.map(x => {
@@ -385,7 +395,7 @@ function GetOrderTags(order) {
     }
     return "";
 }
-
+//Return portions in SambaPOS format.
 function GetPortions(order) {
     if (order.portions.length != 0) {
 		var portions = order.portions.map(x => `portion:"${x.name}",` );
@@ -394,7 +404,7 @@ function GetPortions(order) {
     } 
     return "";  
 }
-
+//Return price in SambaPOS format.
 function GetOrderPrice(order) {
 	if(order.portions.length !=0){
 		var price = order.portions.map(x => `price:${Math.abs((x.price) + (order.price))},`);
@@ -403,7 +413,7 @@ function GetOrderPrice(order) {
         }
 	return `price:${order.price},`;
 }
-
+//Building GQL script to add new tickets. Will take orders, customers, instructions, pickup time, service charges, and ticket type as arguments.
 function getAddTicketScript(orders, customer, instructions, fulfill_at, services, type) {
     var orderLines = orders.filter(x => x.groupCode != 'Temporary open hours!!!!').map(order => {
         return `{

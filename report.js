@@ -1,3 +1,6 @@
+//Building html for reports.
+//TODO: Change to Angular?
+
 module.exports = {generateReport, processHoldOrderData, changeTaskToHTML};
 const sql = require('./sql');
 const samba = require('./Samba');
@@ -177,6 +180,7 @@ async function generateReport(){
     return report;
 }
 
+//compiles all reports into a single report, as a title and content pair
 async function getReports(){
     let reports = await getDisplayReports();
     reports["hold"] = await getHoldReportTable();
@@ -184,7 +188,7 @@ async function getReports(){
     return reports;
 }
 
-
+//will create sections that are collapsable(accordion) for each report
 function getCollapsableSections(data){
     let returnHtml = "";
     let count = 1;
@@ -208,7 +212,8 @@ function getCollapsableSections(data){
     return returnHtml;
 }
 
-
+//get current orders displayed on Kitchen Displays.
+//If the screen is the SDS(Sushi Display Screen) it will add the current order totals.
 async function getDisplayReports(){
     let data = await sql.connect("getDisplayData");
     let ordersTotal = await getOrderTotals();
@@ -219,7 +224,7 @@ async function getDisplayReports(){
     return returnData;
 }
 
-
+//places html table for display data into a div section that makes it scrollable.
 function processDisplayData(data){
     return `<div class="scroll">
                     ${buildTable(5, undefined, [data], {td:`class="display"`})}
@@ -239,11 +244,11 @@ function getHoldReportTable(){
         </div>`};
     });
 }
-//Will retrieve Hold order data from Database
+//SQL Query to get orders on hold.
 function getHoldReportData(){
     return sql.connect("getHoldReportData");
 }
-
+//Build html table for hold orders.
 function getHoldTables(header, data, options){
     let leftData = data.splice(0,8);
     let left = `<div class="column">
@@ -259,7 +264,7 @@ function getHoldTables(header, data, options){
 }
 
 
-
+//SQL Query to get the current displayed order totals.
 function getOrderTotals(){
     return sql.connect("getOrderTotals");
 }
@@ -277,6 +282,8 @@ function getTotalReportTable(){
     });
 }
 
+//Build table for current sales, split into Payment Options, and Grand Total.
+//Will return a Total $0.00 if no sales so far.
 function buildCurrentTotalTable(data){
     let isEmpty = true;
     for(let i in data){
@@ -306,22 +313,24 @@ function buildCurrentTotalTable(data){
         }
         nameCol = buildTable(6,undefined,nameCol,nameOptions);
         valCol = buildTable(6,undefined,valCol,valueOptions);
-        let t = buildTable(5,headers,[[nameCol,valCol]], options);
-        table.push(t);
+        let subTable = buildTable(5,headers,[[nameCol,valCol]], options);
+        table.push(subTable);
     }
     let headers = ["Grand Total"];
     let nameCol = [buildTable(6, undefined, [["Total"], ["Count"]], nameOptions)];
     let valCol = [buildTable(6, undefined, [["$" + grandTotalAmount], [grandTotalCount]], valueOptions)];
-    let t = buildTable(5, headers, [[nameCol, valCol]], options);
-    table.unshift(t);
+    let subTable = buildTable(5, headers, [[nameCol, valCol]], options);
+    table.unshift(subTable);
     return buildTable(4, undefined, [table], undefined);
 }
 
+//Runs sql query to get current sales total for the day.
 function getCurrentTotals(){
     return sql.connect("getCurrentTotals");
 }
 
-//Build html table from data, and add appropriate 
+//Build html table from data, and add appropriate html attributes.
+//TODO: Angular? below code is...ineffecient.
 function buildTable(tabs,header, data, options){
     if(!options) options = {};
     let i = 0;
@@ -371,7 +380,7 @@ ${tab}${tableEnd}`;
     return returnTable;
 }
 
-//Will process Totla Hold Order data retrieved from database into Time, and Amount pairs.
+//Will process Total Hold Order data retrieved from database into Time, and Amount pairs.
 function processHoldOrderData(time, amount){
 	var t = time.substr(6).split(".");
 	t[1] = addTrailingZeroes(parseFloat(("0." + (t[1]?t[1]:"0"))) * 60);
@@ -390,7 +399,7 @@ function addTrailingZeroes(number){
 		number += "0";
 	return number;
 }
-
+//Will return the color depending on the input amount
 function getColoredHoldPrice(input){
     let amount = parseFloat(input);
     if(amount == 0) var color = "gray";

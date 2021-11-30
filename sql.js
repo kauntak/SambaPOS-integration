@@ -1,3 +1,6 @@
+//Connecting to database and executing queries.
+//TODO rename some functions to make them less confusing.(similair names for some.)
+
 module.exports = {connect, insertIntoPaymentsDB, insertIntoDeliverectDB, getHoldOrdersTotal};
 
 const Connection = require('tedious').Connection;
@@ -177,7 +180,13 @@ function insertIntoDeliverectDB(data){
 	});
 }
 
-
+//Retrieve current hold orders from Database.
+//TODO: Change how Ticket data will be retrieved.
+//		Something like
+//		SELECT TotalAmount, tagValue as PickupTime FROM Tickets
+//		CROSS APPLY OPENJSON(TicketTags) WITH tagName varchar(20) '$.TN', tagValue varchar(20) '$.TV') pickupTime
+//		WHERE pickupTime.tagName = 'Pickup Time'
+//		AND CAST(Date as date) = CAST(GETDATE() as date)
 function getHoldOrdersTotal(){
 	let qry = `SELECT Name, Value
 	FROM [SambaPOS5].[dbo].[ProgramSettingValues]		
@@ -201,7 +210,7 @@ function getHoldOrdersTotal(){
 		writeToErrorLog(qry+ "\r\n" + err);
 	});;
 }
-
+//Get current order totals that are displayed.
 function getCurrentOrderTotals(){
 	let qry = `SELECT Value
 	FROM [SambaPOS5].[dbo].[ProgramSettingValues]		
@@ -225,7 +234,7 @@ function getCurrentOrderTotals(){
 	});
 }
 
-
+//Get current displayed orders.
 function getDisplayData(){
 	let qry = `SELECT SUBSTRING(TaskTypes.Name,1,1), Content
 		FROM [SambaPOS5].[dbo].[Tasks]
@@ -253,7 +262,7 @@ function getDisplayData(){
 		writeToErrorLog("QUERY:" + qry + "\r\nERROR:" + err);
 	});
 }
-
+//Get current sales totals.
 function getCurrentTotals(){
 	let qry = `SELECT Name,SUM(Amount) as Total,COUNT(Amount) as Count
 	FROM Payments

@@ -1,3 +1,6 @@
+//Integration for Gloria Foods. Will create ticket in SambaPOS for Orders placed on Gloria Foods.
+//TODO: Currently Polling, will change to Push
+
 module.exports = {start};
 
 const express = require('express');
@@ -124,7 +127,7 @@ function processTickets(tickets) {
 //items:Array[{id:int, name:String,total_item_price:float,price:float,quantity:int,instructions:String, type:String, type_id:int,tax_rate:float,tax_value:float,parent_id:int,item_discount:int,cart_discount_rate:int,cart_discount:float,tax_type:String,options:Array[...]}}
 //
 //
-//will split data into customer, service fees, instructions, and items
+//will split data into customer, service fees, instructions, and items, and create a new ticket.
 async function processOrder(order) {
     let phone = processPhone(order.client_phone);
     let customer = {

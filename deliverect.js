@@ -1,3 +1,5 @@
+//Processing incoming deliverect orders, and creating new tickets in SambaPOS
+
 module.exports = {processDeliverect, start};
 
 const http = require('http');
@@ -47,6 +49,8 @@ function writeToErrorLog(content){
 	log.write("Deliverect_Error", content);
 }
 
+//Originally for testing, will be removed
+//TODO remove.
 async function start(testing){
     if(testing)
         isTest = true;
@@ -71,12 +75,11 @@ async function processDeliverect(data) {
 			cancelOrder(order);
 		else if(order.status == 90)
 			finalizeOrder(order)
-		
 	});
 	await sql.connect(sql.insertIntoDeliverectDB(insertData));
 }
 
-//split ticket into Ticket Details, items, and customer, create ticket, and return an object that can be inserted into DeliverectOrder database
+//split ticket into Ticket Details, items, and customer, will create ticket, and return an object that can be inserted into DeliverectOrder database
 async function processOrder(order) {
     var orderData = processOrderData(order)
 	orderData.entity = orderData.company.constructor(orderData);
@@ -88,7 +91,7 @@ async function processOrder(order) {
     orderData.ticketId = await samba.createTicket(customer, items, order.instructions, order.fulfill_at, services, ticketType);
 	return orderData;
 }
-//TODO: Cancel order, void ticket/orders from SambaPOS, update Kitchen Display
+//TODO: Cancel order, void ticket/orders from SambaPOS, update Kitchen Display Task
 async function cancelOrder(order){
 	return;
 }

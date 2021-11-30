@@ -1,5 +1,6 @@
-module.exports = {start};
+//Local server.
 
+module.exports = {start};
 
 const deliverect = require('./Deliverect');
 const samba = require('./Samba');
@@ -34,9 +35,13 @@ function writeToErrorLog(content){
 	log.write("Server_Error", content);
 }
 //main function to start server.
-//paired with ngrok server.
+//paired with ngrok webhook server.
 //if url is /deliverect and method is post will call the deliverect process function
 //if url is /report and method is get, it will pull report data from SambaPOS
+//TODO: Authentication. Currently anyone can access site.
+//TODO: -Staff schedule sheet access page. Staff login to view schedule and request specific times off.
+//      -Managers can edit schedule and can view staff's requested times off.
+//TODO: receive push requests from GloriaFood
 function start(){
     writeToLog("Server Starting.\r\n\r\n\r\n");
     app.use(express.json());
@@ -57,7 +62,7 @@ function start(){
         });
     });
 
-    app.post("/auth", (req, res) => {
+    app.post("/authenticate", (req, res) => {
         console.log(res);
         let user = req.body.username == userName;
         let pwd = req.body.password == password;
@@ -87,7 +92,9 @@ function start(){
 }
 
 
-/*async function start(){
+/* depreciated code using http
+const http = require('http');
+async function start(){
 	writeToLog("Server Starting.\r\n\r\n\r\n");
 	http.createServer(async (req, res) => {
 		let {headers, method, url} = req;
