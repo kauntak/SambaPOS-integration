@@ -336,6 +336,7 @@ function buildTable(tabs,header, data, options){
     let i = 0;
     let tabCh = "\t";
     let tab = "";
+    let newLine = "\n";
     while(i < tabs){
         tab += tabCh;
         i++;
@@ -350,33 +351,30 @@ function buildTable(tabs,header, data, options){
     let thEnd = "</th>";
     let td = `<td ${options.td?options.td:''}>`;
     let tdEnd = "</td>";
-    let returnTable = `
-${tab}${table}`;
+    let returnTable = `${newLine}${tab}${table}`;
     if(header){
         returnTable += `
 ${tab}${tabCh}${trh}`;
-        for(let i in header)
-            returnTable += `
-${tab}${tabCh}${tabCh}${th}
-${tab}${tabCh}${tabCh}${tabCh}${header[i]}
-${tab}${tabCh}${tabCh}${thEnd}`;
-        returnTable += `
-${tab}${tabCh}${trhEnd}`;
+        for(let i in header){
+            returnTable += newLine + 
+            `${tab}${tabCh}${tabCh}${th}` +
+            `${tab}${tabCh}${tabCh}${tabCh}${header[i]}` +
+            `${tab}${tabCh}${tabCh}${thEnd}`;
+        }
+        returnTable += `${newLine}${tab}${tabCh}${trhEnd}`;
     }
     for(let i in data){
         returnTable += `
 ${tab}${tabCh}${tr}`;
         for(let j in data[i]){
-            returnTable += `
-${tab}${tabCh}${tabCh}${td}
-${tab}${tabCh}${tabCh}${tabCh}${data[i][j]}
-${tab}${tabCh}${tabCh}${tdEnd}`;
+            returnTable += newLine + 
+            `${tab}${tabCh}${tabCh}${td}` + 
+            `${tab}${tabCh}${tabCh}${tabCh}${data[i][j]}` + 
+            `${tab}${tabCh}${tabCh}${tdEnd}`;
         }
-        returnTable += `
-${tab}${tabCh}${trEnd}`;
+        returnTable += `${newLine}${tab}${tabCh}${trEnd}`;
     }
-    returnTable += `
-${tab}${tableEnd}`;
+    returnTable += `${newLine}${tab}${tableEnd}`;
     return returnTable;
 }
 
