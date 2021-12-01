@@ -280,7 +280,6 @@ function loadEmployees(){
 	return getFromClover('employees')
 		.then( data => {
 			employeeList = data;
-			console.log(data);
             return true;
     });
 }
