@@ -239,8 +239,8 @@ function openTerminal(){
 //load a ticket, make payments, and close ticket.
 function payTicket(terminalId, ticketId, amount, paymentType){
 	return gql(getLoadTicketScript(terminalId,ticketId)).then( () => {
-        gql(getPayTicketScript(terminalId, amount, paymentType)).then((resolve, reject) => {
-            closeTicket(terminalId).then((data, err) =>{
+        return gql(getPayTicketScript(terminalId, amount, paymentType)).then((resolve, reject) => {
+            return closeTicket(terminalId).then((data, err) =>{
                 if(data == "Ticket changed. Your latest changes not saved." || err || reject)
                     return false;
                 else   
