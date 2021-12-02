@@ -207,9 +207,9 @@ async function start(testing){
 //Insert payment data into database.
 //Will clear payment data other than the payments that failed.
 async function loop(){
-	let date = await samba.getCloverLastRead(delay + (timeout / 60000));
+	let date = await samba.getCloverLastRead(delay + (timeout / 60000) + (60 * 12));
 	let paymentOptions = `filter=createdTime>=${date.getTime()}`;
-	paymentData.push(...processData(await getFromClover("payments", paymentOptions)));
+	paymentData = paymentData.concat(await Promise.all(processData(await getFromClover("payments", paymentOptions))));
 	if(paymentData.length == 0 ){
 		await samba.setCloverLastRead();
 		return;
@@ -274,6 +274,7 @@ async function loop(){
 	await samba.setCloverLastRead(readDate);
     await sql.connect("Clover", paymentData);//inserting payment data into database. TODO: renaming Clover to something more intuitive
 	paymentData = paymentData.filter(payment => payment.paid == false);
+	console.log(paymentData);
 }
 //Load employees registered on the Clover system.
 function loadEmployees(){
@@ -328,13 +329,15 @@ function processData(payments){
 	date.setMinutes(date.getMinutes() - 10);
 	payments = payments.filter(x => x.result == "SUCCESS" && new Date(x.createdTime) < date).map(async x => {
 		x.employee = {id: x.employee.id};
-		x.employee.name = employeeList.filter(y => y.id == x.employee.id)[0];
-		if(!x.employee.name){
+		let name = employeeList.filter(y => y.id == x.employee.id)[0];
+		if(!name){
 			await loadEmployees();
-			x.employee.name = employeeList.filter(y => y.id == x.employee.id)[0];
-			if(!x.employee.name)
-				x.employee.name = 'No Name';
+			name = employeeList.filter(y => y.id == x.employee.id)[0];
 		}
+		if(!name)
+			x.employee.name = 'No Name';
+		else
+			x.employee.name = name.name;
 		return {
 			id: x.id,
 			employee: {
