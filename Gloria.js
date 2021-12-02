@@ -48,7 +48,7 @@ async function start(testing){
             if(isTest) break;
         }
         else
-            await new Promise(r => setTimeout(r, timeout * 30));
+            await new Promise(r => setTimeout(r, closedTimeout));
     }
 }
 
