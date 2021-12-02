@@ -207,7 +207,7 @@ async function start(testing){
 //Insert payment data into database.
 //Will clear payment data other than the payments that failed.
 async function loop(){
-	let date = await samba.getCloverLastRead(delay + (timeout / 60000) + (60 * 12));
+	let date = await samba.getCloverLastRead(delay + (timeout / 60000));
 	let paymentOptions = `filter=createdTime>=${date.getTime()}`;
 	paymentData = paymentData.concat(await Promise.all(processData(await getFromClover("payments", paymentOptions))));
 	if(paymentData.length == 0 ){
