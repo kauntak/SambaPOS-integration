@@ -15,6 +15,7 @@ const paymentType = process.env.CLOVER_PAYMENT_TYPE;
 //how long to pause between loop iteration
 //minutes x 60000 milliseconds(1minute)
 const timeout = 6 * 60000;
+const closedTimeout =  30 * 60000;
 //How many minutes to delay closing tickets.
 const delay = 10;
 
@@ -193,7 +194,7 @@ async function start(testing){
 			await new Promise(r => setTimeout(r, timeout));
 		}
 		else
-			await new  Promise(r => setTimeout(r, timeout * 5));
+			await new  Promise(r => setTimeout(r, closedTimeout));
     }
 
 }
