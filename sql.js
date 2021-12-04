@@ -182,16 +182,53 @@ function insertIntoDeliverectDB(data){
 
 //Retrieve current hold orders from Database.
 //TODO: Change how Ticket data will be retrieved.
-//		Something like
-//		SELECT TotalAmount, tagValue as PickupTime FROM Tickets
-//		CROSS APPLY OPENJSON(TicketTags) WITH tagName varchar(20) '$.TN', tagValue varchar(20) '$.TV') pickupTime
-//		WHERE pickupTime.tagName = 'Pickup Time'
-//		AND CAST(Date as date) = CAST(GETDATE() as date)
+//		Possibly accept a date variable?
 function getHoldOrdersTotal(){
 	let qry = `SELECT Name, Value
 	FROM [SambaPOS5].[dbo].[ProgramSettingValues]		
 	WHERE Name like 'pickup%'
 	order By Name`;
+	/*TODO: change qry to:
+	`DROP FUNCTION dbo.getPickupInterval
+	GO
+
+	CREATE FUNCTION dbo.getPickupInterval
+	(
+	@input varchar(10)
+	)
+	RETURNS varchar(10)
+	AS
+	BEGIN
+		declare @time table (value varchar(10), RN int)
+		INSERT INTO @time SELECT *, ROW_NUMBER() OVER(ORDER BY (SELECT NULL)) as RN FROM STRING_SPLIT(@input, ':')
+
+		declare @hour varchar(10) 
+		SET @hour = (SELECT value FROM @time WHERE RN = 1)
+		declare @min varchar(10)
+		set @min = (SELECT CAST(value as int) from @time WHERE RN = 2)
+
+		set @min = (CASE
+				WHEN @min < 14 THEN '00'
+				WHEN @min < 29 THEN '15'
+				WHEN @min < 44 THEN '30'
+				ELSE '45'
+		END)
+
+		RETURN CONCAT(@hour, ':', @min)
+	END
+	GO
+
+	SELECT SUM(TotalAmount), pickupTime
+	FROM (
+		SELECT TotalAmount, dbo.getPickupInterval(val) as pickupTime
+		FROM Tickets
+		CROSS APPLY OPENJSON(TicketTags) WITH (tagName varchar(30) '$.TN', val varchar(30) '$.TV') as pikcupTime
+		WHERE CAST(Date as date) = CAST(GETDATE() as date)
+		AND tagName = 'Pickup Time'
+	)a
+	GROUP BY pickupTime
+	ORDER BY pickupTime`
+	*/
 	return new Promise((resolve, reject) => {
 		let res = [];
 		Rqst = new Request(qry,(err,rowCount,rows) => {
