@@ -290,7 +290,7 @@ function buildCurrentTotalTable(data){
         isEmpty = false;
         break;
     }
-    if(isEmpty) return `<p>Total  $0.00</p>`;
+    if(isEmpty) return `<p style="padding-left:15px;">Total  $0.00</p>`;
     
     let options = {th: `colspan="2"`};
     let nameOptions = {td:`class="totalNameTd"`};
