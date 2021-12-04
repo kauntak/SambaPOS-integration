@@ -11,11 +11,11 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const log = require('./log');
-const Server = require('./Server');
-const Webhook = require('./Webhook');
-const Clover = require('./Clover');
-const Gloria = require('./Gloria');
-const Deliverect = require('./Deliverect');
+//const Server = require('./Server');
+//const Webhook = require('./Webhook');
+//const Clover = require('./Clover');
+//const Gloria = require('./Gloria');
+//const Deliverect = require('./Deliverect');
 
 const server = process.env.MESSAGE_SERVER;
 const messageServerPort = process.env.MESSAGE_SERVER_PORT;
