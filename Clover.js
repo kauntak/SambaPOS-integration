@@ -178,9 +178,10 @@ function writeToErrorLog(content){
 	log.write("Clover_Error", content);
 }
 
+start()
 
 //main function to run the Clover integration.
-//If store is open will run an infinite loop, running the function loop(), and will pause for "timeout" milliseconds
+//If store is open will run an infinite loop, running the function loopClover(), and will pause for "timeout" milliseconds
 //Otherwise will wait pause for "timeout" milliseconds * 5 to check if store is open again.
 async function start(testing){
     if(testing)
@@ -189,7 +190,7 @@ async function start(testing){
     await loadEmployees();
     while(true){
 		if(samba.isOpen() || isTest){
-			try{await loop();}
+			try{await loopClover();}
 			catch(err){if(err) writeToErrorLog(err)}
 			await new Promise(r => setTimeout(r, timeout));
 		}
@@ -207,7 +208,7 @@ async function start(testing){
 //Will set the database value for last read time to current time.
 //Insert payment data into database.
 //Will clear payment data other than the payments that failed.
-async function loop(){
+async function loopClover(){
 	let date = await samba.getCloverLastRead(delay + (timeout / 60000));
 	let paymentOptions = `filter=createdTime>=${date.getTime()}`;
 	paymentData = paymentData.concat(await Promise.all(processData(await getFromClover("payments", paymentOptions))));

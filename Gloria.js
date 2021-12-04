@@ -35,14 +35,16 @@ function writeToErrorLog(content){
 	log.write("Gloria_Error", content);
 }
 
-//starting GloriaFood integration app. will run an infinite loop, running the "loop" function
+start();
+
+//starting GloriaFood integration app. will run an infinite loop, running the "loopGloria" function
 async function start(testing){
     if(testing)
         isTest = true;
 	writeToLog("Gloria Started.\r\n\r\n\r\n");
     while(true){
         if(samba.isOpen()){
-            try{await loop();}
+            try{await loopGloria();}
             catch(err){if(err) writeToErrorLog(err)}
             await new Promise(r => setTimeout(r, timeout));
             if(isTest) break;
@@ -54,7 +56,7 @@ async function start(testing){
 
 //the function to be looped.
 //Polls tickets from GloriaFoods and if there are tickets will process them.
-async function loop() {
+async function loopGloria() {
     writeToLog('Reading Tickets...');
     var tickets = await readTickets();
     if(tickets)
