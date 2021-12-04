@@ -3,7 +3,7 @@
 module.exports = {start};
 
 const deliverect = require('./Deliverect');
-const samba = require('./Samba');
+//const samba = require('./Samba');
 const log = require('./log');
 const report = require('./report');
 
@@ -34,6 +34,8 @@ function writeToLog(content){
 function writeToErrorLog(content){
 	log.write("Server_Error", content);
 }
+
+start();
 //main function to start server.
 //paired with ngrok webhook server.
 //if url is /deliverect and method is post will call the deliverect process function
