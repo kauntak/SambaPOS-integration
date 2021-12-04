@@ -13,7 +13,7 @@ const ngrok_options = {
 	subdomain: process.env.NGROK_SUBDOMAIN,
 	authtoken: process.env.AUTH_TOKEN
 };
-//start();
+start();
 
 //writing to log for ngrok web server
 function writeToLog(content){
