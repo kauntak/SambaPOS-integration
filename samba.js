@@ -229,7 +229,7 @@ function getOpenTickets(){
 		});
 }
 
-///register a gql terminal
+//register a GQL terminal
 function openTerminal(){
 	return gql(getOpenTerminalScript())
 		.then(data => data.registerTerminal);
@@ -237,16 +237,25 @@ function openTerminal(){
 
 //load a ticket, make payments, and close ticket.
 function payTicket(terminalId, ticketId, amount, paymentType){
-	return gql(getLoadTicketScript(terminalId,ticketId)).then( () => {
-        return gql(getPayTicketScript(terminalId, amount, paymentType)).then((resolve, reject) => {
-            return closeTicket(terminalId).then((data, err) =>{
-                if(data == "Ticket changed. Your latest changes not saved." || err || reject)
+	return loadTicket(terminalId,ticketId).then( () => {
+        return payLoadedTicket(terminalId, amount, paymentType).then( resolve => {
+            return closeTicket(terminalId).then( data =>{
+                if(data == "Ticket changed. Your latest changes not saved.")
                     return false;
                 else   
                     return true;
-            });
-        });
+            }, err => false);
+        }, err => false);
     });
+}
+
+//loads a ticket to the specified terminal
+function loadTicket(terminalId, ticketId){
+	return gql(getLoadTicketScript(terminalId,ticketId));
+}
+//pays a specified amount on the loaded ticket on the specified terminal.
+function payLoadedTicket(terminalId, amount, paymentType){
+	return gql(getPayTicketScript(terminalId, amount, paymentType));
 }
 
 //close ticket
