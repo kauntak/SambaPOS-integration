@@ -53,14 +53,18 @@ async function start(testing){
             await new Promise(r => setTimeout(r, closedTimeout));
     }
 }
-
+var count = 30;
 //the function to be looped.
 //Polls tickets from GloriaFoods and if there are tickets will process them.
 async function loopGloria() {
-    writeToLog('Reading Tickets...');
+	if(count == 30){
+		count = 0;
+		writeToLog('Reading Tickets...');
+	}
     var tickets = await readTickets();
     if(tickets)
         processTickets(tickets);
+	count++;
 }
 
 //Poll GloriaFoods for any accepted tickets
