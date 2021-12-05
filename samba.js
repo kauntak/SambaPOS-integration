@@ -2,7 +2,7 @@
 
 
 
-module.exports = {isOpen,Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket};
+module.exports = {isOpen,Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket, getCheckHoldOrders};
 
 const request = require('request');
 const querystring = require('querystring');
@@ -274,6 +274,7 @@ function getLoadTicketScript(terminalId, ticketId){
 
 function getPayTicketScript(terminalId, amount, paymentType){
 	return `mutation pay {payTerminalTicket(terminalId:"${terminalId}", paymentTypeName:"${paymentType}", amount:${amount}){ ticketId} }`;
+	return `mutation payCommand{ executeAutomationCommandForTerminalTicket(terminalId:"${terminalId}" name:"Auto Paid By Card" value:"${amount}"){id}}`;
 }
 
 function getCloseTicketScript(terminalId){
@@ -466,9 +467,10 @@ function getAddTicketScript(orders, customer, instructions, fulfill_at, services
 
 //Check Hold Orders
 function getCheckHoldOrders(){
-    return gql(getCheckHoldOrdersScript);
+    return gql(getCheckHoldOrdersScript());
 }
 //Check Hold Orders Script
 function getCheckHoldOrdersScript(){
-    return `mutation check {executeAutomationCommand(name:"Check Hold Orders" terminal:"Server" department:"Takeout" user:"Admin" ticketType:"Gloria Ticket")}`;
+    return `mutation check {executeAutomationCommand(name:"Test" terminal:"Server" event:"" department:"Takeout" user:"Admin" ticketType:"Gloria Ticket")}`;
+    //return `mutation check {executeAutomationCommand(name:"Check Hold Orders" terminal:"Server" department:"Takeout" user:"Admin" ticketType:"Gloria Ticket")}`;
 }
