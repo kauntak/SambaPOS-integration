@@ -85,10 +85,11 @@ async function processOrder(order) {
 	orderData.entity = orderData.company.constructor(orderData);
 	if(order.note)
 		order.note = order.note.replace(/\\"/g,`\\\\"`);
+	else order.note = "";
 	var customer = await loadCustomer(orderData.entity);
 	
 	let items = await samba.loadItems(order.items.map(x => processItem(x, orderData.decimalDigits)));
-    orderData.ticketId = await samba.createTicket(customer, items, order.instructions, order.fulfill_at, services, ticketType);
+    orderData.ticketId = await samba.createTicket(customer, items, order.note, order.time, services, ticketType);
 	return orderData;
 }
 //TODO: Cancel order, void ticket/orders from SambaPOS, update Kitchen Display Task
