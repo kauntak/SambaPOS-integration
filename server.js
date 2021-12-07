@@ -15,6 +15,8 @@ const cookieParse = require('cookie-parser');
 const bodyParser = require('body-parser');
 const path = require('path');
 const express = require('express');
+const { request } = require('http');
+const users = require('./Users');
 
 const app = express();
 dotenv.config();
@@ -22,9 +24,6 @@ const listenPort = process.env.LISTEN_PORT;
 const hostname = 'localhost';
 
 const whiteList = ["35.241.160.154", "35.241.180.107", "104.199.82.58", "34.79.19.218"];
-
-const userName = process.env.AUTH_USER;
-const password = process.env.AUTH_PWD;
 
 //writing to log for the server.
 function writeToLog(content){
@@ -40,9 +39,11 @@ start();
 //paired with ngrok webhook server.
 //if url is /deliverect and method is post will call the deliverect process function
 //if url is /report and method is get, it will pull report data from SambaPOS
-//TODO: Authentication. Currently anyone can access site.
+//TODO: Authentication. Currently single user is stored as .env variable. Change to database.
+//TODO: Forgot password link. Will email registered email address with a password reset link.
 //TODO: -Staff schedule sheet access page. Staff login to view schedule and request specific times off.
 //      -Managers can edit schedule and can view staff's requested times off.
+//      -Managers can add/remove staff
 //TODO: receive push requests from GloriaFood
 function start(){
     writeToLog("Server Starting.\r\n\r\n\r\n");
@@ -54,25 +55,40 @@ function start(){
         resave: true,
         saveUninitialized: true
     }));
-    app.get("/", (req,res) => {
+    app.get("/login", (req,res) => {
         res.sendFile(__dirname + '/public/login.html');
     });
     app.get("/reports", (req, res)=>{
         writeToLog("ACCESSED FROM: " + JSON.stringify(req.headers, undefined, 2));
-        report.generateReport().then((html)=>{
-            res.send(html);
-        });
+        if(req.session.loggedin)
+            report.generateReport().then( html =>{
+                res.send(html);
+            });
+        else res.redirect('/login');
     });
+    app.get("/reset_password", (req,res)=>{
+        res.sendFile(__dirname + '/public/reset_password.html');
+    });
+
 
     app.post("/authenticate", (req, res) => {
         console.log(res);
-        let user = req.body.username == userName;
-        let pwd = req.body.password == password;
-        if(user && pwd){
-
+        if(users.checkUserAndPassword(req.body.username, req.body.password)){
+            req.session.loggedin = true;
+            req.session.username = req.body.username;
+            res.redirect('/reports');
         }
-        else response.send('Incorrect Username and/or password!');
+        else res.send('Incorrect Username and/or password!');
     });
+
+    //TODO: setup email sending.
+    app.post("/reset_password", (req, res) =>{
+        let email = req.body.email;
+        //
+        //res.send() email sent to: ${email} html page.
+        res.send('Ask Non.');
+    });
+
     app.post("/deliverect", (req, res)=>{
         writeToLog(req.headers);
         if(whiteList.includes(req.headers['x-forwarded-for'])){
