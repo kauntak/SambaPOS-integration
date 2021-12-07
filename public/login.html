@@ -22,11 +22,12 @@
 			width:auto;
 			margin: 0 auto;
 			font-family: Tahoma, Geneva, sans-serif;
-            background-color: grey;
+            background-color: rgb(85,85,85);
+			box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.3);
 		}
 		.login-form h1 {
 			text-align: center;
-			color: #4d4d4d;
+			color: whitesmoke;
 			font-size: 24px;
 			padding: 20px 0 20px 0;
 		}
@@ -41,15 +42,22 @@
 		.login-form input[type="submit"] {
 			width: 100%;
 			padding: 15px;
-			background-color: #174420;
+			background-color:#022701;
 			border: 0;
 			box-sizing: border-box;
 			cursor: pointer;
 			font-weight: bold;
 			color: #ffffff;
+			margin-top: 15px;
 		}
 		.login-form input[type="submit"]:hover{
-			background-color: #265830;
+			background-color: #3c5047;
+		}
+		.forgot{
+			color: honeydew;
+		}
+		.forgot:hover{
+			color: #8db6a3;
 		}
 		</style>
 	</head>
@@ -57,9 +65,10 @@
 		<div class="login-form">
 			<h1>Login</h1>
 			<form action="authenticate" method="POST" class="form">
-				<input type="text" name="username" placeholder="Username" required>
+				<input type="text" name="username" placeholder="Username/e-mail" required>
 				<input type="password" name="password" placeholder="Password" required>
-				<input type="submit">
+				<a href="/reset_password" target="_blank" class="forgot">Forgot password?</a>
+				<input type="submit" value="Login">
 			</form>
 		</div>
 	</body>
