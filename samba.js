@@ -2,7 +2,7 @@
 
 
 
-module.exports = {isOpen,Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket};
+module.exports = {isOpen,Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket, getCheckHoldOrders};
 
 const request = require('request');
 const querystring = require('querystring');
@@ -229,7 +229,7 @@ function getOpenTickets(){
 		});
 }
 
-///register a gql terminal
+//register a GQL terminal
 function openTerminal(){
 	return gql(getOpenTerminalScript())
 		.then(data => data.registerTerminal);
@@ -237,16 +237,25 @@ function openTerminal(){
 
 //load a ticket, make payments, and close ticket.
 function payTicket(terminalId, ticketId, amount, paymentType){
-	return gql(getLoadTicketScript(terminalId,ticketId)).then( () => {
-        return gql(getPayTicketScript(terminalId, amount, paymentType)).then((resolve, reject) => {
-            return closeTicket(terminalId).then((data, err) =>{
-                if(data == "Ticket changed. Your latest changes not saved." || err || reject)
+	return loadTicket(terminalId,ticketId).then( () => {
+        return payLoadedTicket(terminalId, amount, paymentType).then( resolve => {
+            return closeTicket(terminalId).then( data =>{
+                if(data == "Ticket changed. Your latest changes not saved.")
                     return false;
                 else   
                     return true;
-            });
-        });
+            }, err => false);
+        }, err => false);
     });
+}
+
+//loads a ticket to the specified terminal
+function loadTicket(terminalId, ticketId){
+	return gql(getLoadTicketScript(terminalId,ticketId));
+}
+//pays a specified amount on the loaded ticket on the specified terminal.
+function payLoadedTicket(terminalId, amount, paymentType){
+	return gql(getPayTicketScript(terminalId, amount, paymentType));
 }
 
 //close ticket
@@ -274,6 +283,7 @@ function getLoadTicketScript(terminalId, ticketId){
 
 function getPayTicketScript(terminalId, amount, paymentType){
 	return `mutation pay {payTerminalTicket(terminalId:"${terminalId}", paymentTypeName:"${paymentType}", amount:${amount}){ ticketId} }`;
+	return `mutation payCommand{ executeAutomationCommandForTerminalTicket(terminalId:"${terminalId}" name:"Auto Paid By Card" value:"${amount}"){id}}`;
 }
 
 function getCloseTicketScript(terminalId){
@@ -466,9 +476,10 @@ function getAddTicketScript(orders, customer, instructions, fulfill_at, services
 
 //Check Hold Orders
 function getCheckHoldOrders(){
-    return gql(getCheckHoldOrdersScript);
+    return gql(getCheckHoldOrdersScript());
 }
 //Check Hold Orders Script
 function getCheckHoldOrdersScript(){
-    return `mutation check {executeAutomationCommand(name:"Check Hold Orders" terminal:"Server" department:"Takeout" user:"Admin" ticketType:"Gloria Ticket")}`;
+    return `mutation check {executeAutomationCommand(name:"Test" terminal:"Server" event:"" department:"Takeout" user:"Admin" ticketType:"Gloria Ticket")}`;
+    //return `mutation check {executeAutomationCommand(name:"Check Hold Orders" terminal:"Server" department:"Takeout" user:"Admin" ticketType:"Gloria Ticket")}`;
 }
