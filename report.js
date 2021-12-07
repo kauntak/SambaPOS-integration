@@ -318,7 +318,7 @@ function buildCurrentTotalTable(data){
     }
     let headers = ["Grand Total"];
     let nameCol = [buildTable(6, undefined, [["Total"], ["Count"]], nameOptions)];
-    let valCol = [buildTable(6, undefined, [["$" + grandTotalAmount], [grandTotalCount]], valueOptions)];
+    let valCol = [buildTable(6, undefined, [["$" + round(grandTotalAmount, 2)], [grandTotalCount]], valueOptions)];
     let subTable = buildTable(5, headers, [[nameCol, valCol]], options);
     table.unshift(subTable);
     return buildTable(4, undefined, [table], undefined);
@@ -330,7 +330,7 @@ function getCurrentTotals(){
 }
 
 //Build html table from data, and add appropriate html attributes.
-//TODO: Angular? below code is...ineffecient.
+//TODO: Angular? React? below code is...inefficient/hard to read/understand.
 function buildTable(tabs,header, data, options){
     if(!options) options = {};
     let i = 0;
@@ -364,12 +364,12 @@ ${tab}${tabCh}${trh}`;
         returnTable += `${newLine}${tab}${tabCh}${trhEnd}`;
     }
     for(let i in data){
-        returnTable += `
-${tab}${tabCh}${tr}`;
+        returnTable += newLine + 
+            `${tab}${tabCh}${tr}`;
         for(let j in data[i]){
             returnTable += newLine + 
-            `${tab}${tabCh}${tabCh}${td}` + 
-            `${tab}${tabCh}${tabCh}${tabCh}${data[i][j]}` + 
+            `${tab}${tabCh}${tabCh}${td}` + newLine + 
+            `${tab}${tabCh}${tabCh}${tabCh}${data[i][j]}` + newLine +
             `${tab}${tabCh}${tabCh}${tdEnd}`;
         }
         returnTable += `${newLine}${tab}${tabCh}${trEnd}`;
@@ -422,4 +422,10 @@ function changeTaskToHTML(data){
                                                 .replace(/\r\n/g, "</br>")
                                                 .replace("__________________________________________", "__________________")}
                                         </p>`;
+}
+
+//round any values to specified precision.(For floating point calculations.)
+function round(value, precision){
+	let multiplier = Math.pow(10, precision || 0);
+	return Math.round(value * multiplier) / multiplier;
 }
