@@ -65,6 +65,8 @@ async function start(testing){
 //for each order that is received it will check the order status and call the required function.
 //after orders have been processed, the orders will be inserted into DeliverectOrders database
 async function processDeliverect(data) {
+	writeToLog(data);
+	return;
 	if (data["_meta"].total == 0 ) return;
 	let insertData = [];
     data["_items"].forEach(async (order) => {
