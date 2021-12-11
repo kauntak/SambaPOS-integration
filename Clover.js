@@ -25,148 +25,38 @@ let readDate = new Date();
 let isTest = false;
 let testData = [
 	{
-	  "id": "1CHS0KZ4AG85V64",
-	  "employee": {
-		"id": "4SCX9K33S7SKR",
-		"name": "Non"
+		"id": "0MQ3SYV7GR880PT",
+		"employee": {
+		  "id": "4Z3FGZ4FEHQKG62",
+		  "name": "Non"
+		},
+		"time": "2021-12-10 17:33:37",
+		"amount": 55.49,
+		"tipAmount": 11.1,
+		"result": "SUCCESS"
 	  },
-	  "time": "2021-11-30 16:34:22",
-	  "amount": 72.19,
-	  "tipAmount": 3,
-	  "result": "SUCCESS",
-	},
-	{
-	  "id": "YV0DAF7X9D1VF9P",
-	  "employee": {
-		"id": "4SCX9K33S7SKR",
-		"name": "Non"
+	  {
+		"id": "094YKEA78YZ5X9P",
+		"employee": {
+		  "id": "4Z3FGZ4FEHQKG62",
+		  "name": "Non"
+		},
+		"time": "2021-12-10 17:33:34",
+		"amount": 73.24,
+		"tipAmount": 14.65,
+		"result": "SUCCESS"
 	  },
-	  "time": "2021-11-30 16:42:00",
-	  "amount": 16.49,
-	  "tipAmount": 2.47,
-	  "result": "SUCCESS",
-	},
-	{
-	  "id": "VXHA75FMQVG8VZE",
-	  "employee": {
-		"id": "279TP8BSACGPG",
-		"name": "Non"
-	  },
-	  "time": "2021-11-30 16:41:45",
-	  "amount": 22.55,
-	  "tipAmount": 3.38,
-	  "result": "SUCCESS",
-	},
-	{
-	  "id": "WT84KYFCQXMEWJE",
-	  "employee": {
-		"id": "4SCX9K33S7SKR",
-		"name": "Non"
-	  },
-	  "time": "2021-11-30 16:38:13",
-	  "amount": 29.98,
-	  "tipAmount": 4.5,
-	  "result": "SUCCESS"
-	},
-	{
-	  "id": "1CHS0KGWZ485V64",
-	  "employee": {
-		"id": "4SCX9K33S7SKR",
-		"name": "Non"
-	  },
-	  "time": "2021-11-30 16:34:22",
-	  "amount": 72.19,
-	  "tipAmount": 3,
-	  "result": "SUCCESS"
-	},
-	{
-	  "id": "N67XRG2KZ6T3B0J",
-	  "employee": {
-		"id": "4SCX9K33S7SKR",
-		"name": "Non"
-	  },
-	  "time": "2021-11-30 17:01:19",
-	  "amount": 100,
-	  "tipAmount": 0,
-	  "result": "SUCCESS"
-	},
-	{
-	  "id": "7K7VWF1W60Z6HKG",
-	  "employee": {
-		"id": "279TP8BSACGPG",
-		"name": "Non"
-	  },
-	  "time": "2021-11-30 17:13:58",
-	  "amount": 60.64,
-	  "tipAmount": 9.1,
-	  "result": "SUCCESS"
-	},
-	{
-	  "id": "6SZA9WB5T8VRPF0",
-	  "employee": {
-		"id": "279TP8BSACGPG",
-		"name": "Non"
-	  },
-	  "time": "2021-11-30 17:17:25",
-	  "amount": 30.31,
-	  "tipAmount": 8,
-	  "result": "SUCCESS"
-	},
-	{
-	  "id": "8B5TH7X8854T0VT",
-	  "employee": {
-		"id": "279TP8BSACGPG",
-		"name": "Non"
-	  },
-	  "time": "2021-11-30 17:25:53",
-	  "amount": 59.27,
-	  "tipAmount": 11.85,
-	  "result": "SUCCESS"
-	},
-	{
-	  "id": "K534ZT3DYFREY58",
-	  "employee": {
-		"id": "279TP8BSACGPG",
-		"name": "Non"
-	  },
-	  "time": "2021-11-30 17:23:52",
-	  "amount": 87.83,
-	  "tipAmount": 5,
-	  "result": "SUCCESS"
-	},
-	{
-	  "id": "19XW542PAG12BSR",
-	  "employee": {
-		"id": "279TP8BSACGPG",
-		"name": "Non"
-	  },
-	  "time": "2021-11-30 17:37:05",
-	  "amount": 51.97,
-	  "tipAmount": 0,
-	  "result": "SUCCESS"
-	},
-	{
-	  "id": "0E1RH4P0V91AG04",
-	  "employee": {
-		"id": "279TP8BSACGPG",
-		"name": "Non"
-	  },
-	  "time": "2021-11-30 17:30:33",
-	  "amount": 84.42,
-	  "tipAmount": 8,
-	  "result": "SUCCESS"
-	},
-	{
-	  "id": "01RH4P0V9FB1G04",
-	  "employee": {
-		"id": "279TP8BSACGPG",
-		"name": "Non"
-	  },
-	  "time": "2021-11-30 17:30:33",
-	  "amount": 999.99,
-	  "tipAmount": 8,
-	  "result": "SUCCESS"
-	}
+	  {
+		"id": "6HD5AK0FFETSJ38",
+		"employee": {
+		  "id": "4Z3FGZ4FEHQKG62",
+		  "name": "Non"
+		},
+		"time": "2021-12-10 17:31:06",
+		"amount": 225,
+		"tipAmount": 0,
+		"result": "SUCCESS"
+	  }
   ];
 
 //Writing to log for Clover
@@ -178,14 +68,16 @@ function writeToErrorLog(content){
 	log.write("Clover_Error", content);
 }
 
-start()
+start();
 
 //main function to run the Clover integration.
 //If store is open will run an infinite loop, running the function loopClover(), and will pause for "timeout" milliseconds
 //Otherwise will wait pause for "timeout" milliseconds * 5 to check if store is open again.
 async function start(testing){
-    if(testing)
+    if(testing){
         isTest = true;
+		paymentData = testData;
+	}
 	writeToLog("Clover Started.\r\n\r\n\r\n");
     await loadEmployees();
     while(true){
@@ -209,17 +101,15 @@ async function start(testing){
 //Insert payment data into database.
 //Will clear payment data other than the payments that failed.
 async function loopClover(){
-	let date = await samba.getCloverLastRead(delay + (timeout / 60000));
-	let paymentOptions = `filter=createdTime>=${date.getTime()}`;
-	paymentData = paymentData.concat(await Promise.all(processData(await getFromClover("payments", paymentOptions))));
+	let date = await getCloverLastRead(delay + (timeout / 60000));
+	paymentData = paymentData.concat(await Promise.all(processData(await getPaymentData(date))));
 	if(paymentData.length == 0 ){
-		await samba.setCloverLastRead();
+		await setCloverLastRead();
 		return;
 	}
 	writeToLog("Payments: " + JSON.stringify(paymentData, undefined, 2));
-	let tickets = await samba.getOpenTakeoutTickets();
+	let tickets = await getOpenTakeoutTickets();
 	writeToLog("Tickets: " + JSON.stringify(tickets, undefined, 2));
-	let terminalId = await samba.openTerminal();
 	let unpaid = [];
 	for(let i in paymentData) { //Will check if open tickets have same amount as paid amount, and close said ticket. Payments that were not found will be added to an unpaid array.
 		if(paymentData[i].paid) continue;
@@ -228,7 +118,7 @@ async function loopClover(){
 			unpaid.push({index:i, data:paymentData[i]});
 			continue;
 		}
-		let isPaid = await samba.payTicket(terminalId, tickets[index].id, paymentData[i].amount, paymentType);
+		let isPaid = await payTicket(tickets[index].id, paymentData[i].amount, paymentType);
 		tickets.splice(index, 1);
 		paymentData[i].paid = isPaid;
 	}
@@ -239,13 +129,14 @@ async function loopClover(){
 				let amount = round(unpaid[i].data.amount + unpaid[j].data.amount, 2);
 				let index = tickets.findIndex(tk => amount == tk.remainingAmount);
 				if(index != -1){
-					let isPaid = await samba.payTicket(terminalId, tickets[index].id, amount, paymentType);
-					paymentData[unpaid[i].index].paid = isPaid;
-					paymentData[unpaid[j].index].paid = isPaid;
+					let isPaidI = await payTicket(tickets[index].id, unpaid[i].data.amount, paymentType);
+					let isPaidJ = await payTicket(tickets[index].id, unpaid[j].data.amount, paymentType);
+					paymentData[unpaid[i].index].paid = isPaidI;
+					paymentData[unpaid[j].index].paid = isPaidJ;
 					unpaid.splice(i, 0);
 					unpaid.splice(j, 0);
 					tickets.splice(index, 0);
-					i -= 2;
+					i -= 1;
 					break;
 				}
 				j--;
@@ -259,22 +150,22 @@ async function loopClover(){
 				let amount = round(tickets[i].remainingAmount + tickets[j].remainingAmount, 2);
 				let index = unpaid.findIndex(payment => amount == payment.data.amount);
 				if(index != -1){
-					let iIsPaid = await samba.payTicket(terminalId, tickets[i].id, amount, paymentType);
-					let jIsPaid = await samba.payTicket(terminalId, tickets[j].id, amount, paymentType);
+					let iIsPaid = await payTicket(tickets[i].id, amount, paymentType);
+					let jIsPaid = await payTicket(tickets[j].id, amount, paymentType);
 					paymentData[unpaid[i].index].paid = iIsPaid;
 					paymentData[unpaid[j].index].paid = jIsPaid;
 					tickets.splice(i, 0);
 					tickets.splice(j, 0);
 					unpaid.splice(index, 0);
-					i -= 2;
+					i -= 1;
 					break;
 				}
+				j--;
 			}
 		}
 	}
-    await samba.closeTerminal(terminalId);
-	await samba.setCloverLastRead(readDate);
-    await sql.connect("Clover", paymentData);//inserting payment data into database. TODO: renaming Clover to something more intuitive
+    await setCloverLastRead();
+    await insertIntoPaymentsDB();
 	paymentData = paymentData.filter(payment => payment.paid == false);
 	console.log(paymentData);
 }
@@ -284,8 +175,39 @@ function loadEmployees(){
 		.then( data => {
 			employeeList = data;
             return true;
-    });
+    }).catch(err => writeToErrorLog(err));
 }
+
+//Get value for when clover was last polled
+function getCloverLastRead(delay){
+    return samba.getGlobalSetting("lastCloverCheck").then(res => {
+        let date = new Date(res);
+        if(delay)
+            date.setMinutes(date.getMinutes() - delay);
+        return date;
+    }).catch( err => writeToErrorLog(err) );
+}
+
+//Setting value for when Clover was last polled
+function setCloverLastRead(date){
+	if(!date)
+		date = new Date();
+    return samba.updateGlobalSetting("lastCloverCheck", date.toJSON())
+		.then(() => true)
+		.catch( err => writeToErrorLog(err) );
+}
+
+//Retreiving all currently open takeout tickets
+function getOpenTakeoutTickets(){
+    return samba.getOpenTickets()
+		.then(tickets => {
+			return tickets.filter(ticket =>
+				ticket.type != 'Delivery Ticket');
+        })
+		.catch( () => []);
+}
+
+
 
 //function for polling Clover
 //Type:Payments,Employees, etc.
@@ -308,11 +230,19 @@ function getFromClover(type,options) {
                 reject(err);
             }
         });	
-    }).catch(err =>{
-        writeToLog("ERROR: " + err.message);
-        return false;
     });
 }
+
+//Get payments from specified time from Clover
+function getPaymentData(date){
+	let paymentOptions = `filter=createdTime>=${date.getTime()}`;
+	return getFromClover("payments", paymentOptions)
+		.catch( err => {
+			writeToErrorLog(err);
+			return [];
+		});
+}
+
 
 //Will process data received from Clover into an array of payment object(s).
 //Filter for result == "SUCCESS" as well as tickets were before the delay time.
@@ -331,15 +261,15 @@ function processData(payments){
 	date.setMinutes(date.getMinutes() - 10);
 	payments = payments.filter(x => x.result == "SUCCESS" && new Date(x.createdTime) < date).map(async x => {
 		x.employee = {id: x.employee.id};
-		let name = employeeList.filter(y => y.id == x.employee.id)[0];
-		if(!name){
+		let employeeData = employeeList.filter(y => y.id == x.employee.id)[0];
+		if(!employeeData){
 			await loadEmployees();
-			name = employeeList.filter(y => y.id == x.employee.id)[0];
+			employeeData = employeeList.filter(y => y.id == x.employee.id)[0];
 		}
-		if(!name)
+		if(!employeeData)
 			x.employee.name = 'No Name';
 		else
-			x.employee.name = name.name;
+			x.employee.name = employeeData.name;
 		return {
 			id: x.id,
 			employee: {
@@ -368,4 +298,61 @@ function processCloverJSON(key,value)
 function round(value, precision){
 	let multiplier = Math.pow(10, precision || 0);
 	return Math.round(value * multiplier) / multiplier;
+}
+
+//pay Ticket
+function payTicket(ticketId, amount, paymentType){
+	return sql.payTicket(ticketId, amount, paymentType)
+		.then(res => {
+			console.log(`Paid $${amount} for Ticket ${ticketId}.`)
+			return res;
+		})
+		.catch(err => {
+			writeToErrorLog(err);
+			return false;
+		});
+}
+
+//Inserting processed data received from Clover into CreditTerminalTransaction
+function insertIntoPaymentsDB(){
+	let qry = `DECLARE @JSON NVARCHAR(MAX) = '${JSON.stringify(paymentData)}';
+			
+		CREATE TABLE #TEMP(
+			[Payment_Date] [nvarchar](50) NOT NULL,
+			[Payment_ID] [nvarchar](50) NOT NULL,
+			[Amount] [float] NOT NULL,
+			[Tip_Amount] [float] NULL,
+			[Payment_Employee_ID] [nvarchar](50) NOT NULL,
+			[Payment_Employee_Name] [nvarchar](50) NOT NULL,
+			[Result] [nvarchar](50) NOT NULL
+			)ON [PRIMARY];
+		
+		INSERT INTO #TEMP ([Payment_Date],[Payment_ID],[Amount],[Tip_Amount],[Payment_Employee_ID],[Payment_Employee_Name],[Result])
+		SELECT Date,Id,Amount,TipAmount,EmployeeId,EmployeeName,Result
+		FROM OPENJSON(@JSON)
+		WITH (
+			Date datetime '$.time',
+			Id nvarchar(30) '$.id',
+			Amount float '$.amount',
+			TipAmount float '$.tipAmount',
+			EmployeeId nvarchar(20) '$.employee.id',
+			EmployeeName nvarchar(20) '$.employee.name',
+			Result nvarchar(20) '$.result'
+			)
+		WHERE Result = 'SUCCESS';
+		
+		INSERT INTO CreditTerminalTransactions([Payment_Date],[Payment_ID],[Amount],[Tip_Amount],[Payment_Employee_ID],[Payment_Employee_Name],[Result])
+		SELECT [Payment_Date],[Payment_ID],[Amount],[Tip_Amount],[Payment_Employee_ID],[Payment_Employee_Name],[Result] FROM #TEMP
+		WHERE NOT EXISTS(SELECT CreditTerminalTransactions.Payment_ID FROM CreditTerminalTransactions WHERE CreditTerminalTransactions.Payment_ID = #TEMP.Payment_ID collate SQL_Latin1_General_CP1_CI_AS);
+		
+		DROP TABLE #TEMP;`
+	return sql.exec(qry)
+		.then(res => {
+			writeToLog(`Payment Data added to DB.`);
+			return true;
+		})
+		.catch(err => {
+			writeToErrorLog("QUERY:" + qry + "\r\nERROR:" + err);
+			return false;
+		});
 }
