@@ -2,7 +2,7 @@
 
 
 
-module.exports = {isOpen,Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket, getCheckHoldOrders};
+module.exports = {isOpen, gql, updateGlobalSetting, getGlobalSetting, getOpenTickets, openTerminal, closeTerminal, payTicket, closeTicket, loadCustomer, loadItems, createTicket }; //Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket, getCheckHoldOrders};
 
 const request = require('request');
 const querystring = require('querystring');
@@ -104,7 +104,7 @@ async function gql(query) {
         writeToLog('Valid access Token is needed to execute GQL calls.')
         await Authorize();
     } else if (accessTokenExpires < new Date()) {
-        writeToLog('Access Token Expired. Reauthenticating...');
+        writeToLog('Access Token Expired. Re-authenticating...');
         await Authorize();
     }
     let data = JSON.stringify({ query: query });
@@ -129,35 +129,47 @@ async function gql(query) {
                 let res = JSON.parse(body);
                 writeToLog("GQL QUERY : " + JSON.stringify(query, undefined,2));
                 writeToLog("GQL Result: " + JSON.stringify(res.data, undefined, 2));
-                writeToLog("GQL ERROR:  " + JSON.stringify(res.errors));
+                writeToLog("GQL ERROR:  " + JSON.stringify(res.errors) + "\r\n\r\n");
                 resolve(res.data);
             }
         });	
     });
 }
 
-//Retreiving value for when clover was last polled
-function getCloverLastRead(delay){
-    let qry = `{getGlobalSetting(name:"lastCloverCheck"){value}}`;
-    return gql(qry)
-        .then( resp =>{
-			let date = new Date(resp.getGlobalSetting.value);
-            if(delay)
-			    date.setMinutes(date.getMinutes() - delay);
-            return date;
-        })
+//get Samba Program Setting Values
+function getGlobalSetting(settingName){
+    if(typeof settingName == undefined) return;
+    let qry = `{getGlobalSetting(name:"${settingName}"){value}}`;
+    return gql(qry).then(res => {
+        console.log(res);
+        return res.getGlobalSetting.value;
+    });
 }
 
-//Setting value for when Clover was last polled
-function setCloverLastRead(date){
-	if(!date)
-		date = new Date();
-    let qry = `mutation m{updateGlobalSetting(name:"lastCloverCheck", value:"${date.toJSON()}"){value}}`;
-    return gql(qry)
-        .then( () =>{
-            return true;
-        });
+//set Samba Program Setting Values
+async function updateGlobalSetting(settingName, value, updateType){
+    if(typeof settingName == undefined) return;
+    value = typeof value == undefined ? '' : value;
+
+    var newValue = "";
+
+    if(updateType == undefined) newValue = value;
+    else{
+        let currentValue = await getGlobalSetting(settingName);
+        if(updateType == 'decrease')
+            newValue = parseFloat(currentValue) - value;
+        else if (updateType == 'increase')
+            newValue = parseFloat(currentValue) + value;
+    }
+    let qry = `mutation update{setting: updateGlobalSetting(name:"${settingName}", value: "${newValue}"){value}}`;
+    console.log(qry);
+    return gql(qry).then(res => {
+        return res.setting.value;
+    });
 }
+
+
+
 
 //Retreiving value for when deliverect was last polled
 function getDeliverectLastRead(delay){
@@ -182,13 +194,7 @@ function setDeliverectLastRead(date){
         });
 }
 
-//Retreiving all currently open takeout tickets
-function getOpenTakeoutTickets(){
-    return getOpenTickets().then(tickets => {
-        return tickets.filter(ticket =>
-            ticket.type != 'Delivery Ticket');
-        });
-}
+
 
 //Retreiving all currently open delivery tickets
 function getOpenDeliveryTickets(){
@@ -266,6 +272,11 @@ function closeTicket(terminalId){
 //unregister gql terminal
 function closeTerminal(terminalId){
 	return gql(getCloseTerminalScript(terminalId));
+}
+
+//Send an event message
+function broadcast(msg){
+    return gql(getPostBroadcastScript(msg));
 }
 
 function getOpenTicketsScript(){
