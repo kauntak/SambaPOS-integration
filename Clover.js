@@ -204,7 +204,10 @@ function getOpenTakeoutTickets(){
 			return tickets.filter(ticket =>
 				ticket.type != 'Delivery Ticket');
         })
-		.catch( () => []);
+		.catch( err => {
+			writeToErrorLog(err);
+			return [];
+		});
 }
 
 
