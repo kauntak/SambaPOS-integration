@@ -133,7 +133,7 @@ function processTickets(tickets) {
 //items:Array[{id:int, name:String,total_item_price:float,price:float,quantity:int,instructions:String, type:String, type_id:int,tax_rate:float,tax_value:float,parent_id:int,item_discount:int,cart_discount_rate:int,cart_discount:float,tax_type:String,options:Array[...]}}
 //
 //
-//will split data into customer, service fees, instructions, and items, and create a new ticket.
+//will split data into customer, service fees, instructions, and items, then create a new ticket.
 async function processOrder(order) {
     let phone = processPhone(order.client_phone);
     let customer = {
@@ -150,10 +150,10 @@ async function processOrder(order) {
 	if(order.instructions)
 		order.instructions = processComment(order.instructions);
     let sambaCustomer = await samba.loadCustomer(customer);
-	var services = order.items
-	   .filter(x => x.type === 'tip' || x.type === 'delivery_fee' || x.type === 'promo_cart')
-		.filter(x => x.name)
-	   .map(x => { return { name: getCalculationName(x.type), amount: Math.abs((x.cart_discount_rate) * 100) || x.price}; }) 
+	let services = order.items
+	    .filter(x => x.type === 'tip' || x.type === 'delivery_fee' || x.type === 'promo_cart')
+	    .filter(x => x.name)
+	    .map(x => { return { name: getCalculationName(x.type), amount: Math.abs((x.cart_discount_rate) * 100) || x.price}; }) 
 	let items = await samba.loadItems(order.items.map(x => processItem(x)));
     await samba.createTicket(sambaCustomer, items, order.instructions, order.fulfill_at, services, ticketType);
     lastQryCompleted = true;
@@ -170,7 +170,7 @@ function getCalculationName(name) {
 
 //process phone number
 function processPhone(phone){
-    return phone.match(/^\+?(\d{10})/)[1];
+    return phone.match(/^\+?(\d{11})/)[1];
 }
 
 //will process items into a SambaPOS readable item.
@@ -193,3 +193,139 @@ function processItem(item) {
 function processComment(comment){
     return comment.replace(/"/g, "'").replace(/\n/g, "  ").replace(/~/g, "-");
 }
+
+
+//load items from SambaPOS and return an item object.
+function loadItems(items) {
+    return samba.gql(getLoadItemsScript(items))
+		.then(data => {
+			return (items.filter(x => x.type === 'item').map(item => {
+				return {
+					id: item.id,
+					name: item.name,
+					type: item.type,
+					sambaName: data[`i${item.id}`]===null ? miscProductName : data[`i${item.id}`].name,
+					price: item.price,
+					quantity: item.quantity,
+					instructions: item.instructions,
+					options: item.options,
+					portions: item.portions,
+					groupCode: data[`i${item.id}`]===null ? miscProductName : data[`i${item.id}`].groupCode
+				}
+			}));
+		});
+}
+
+//Build GQL script for retreiving items from SambaPOS
+function getLoadItemsScript(items) {
+    var part = items.map(item => `i${item.id}: getProduct(name:"${item.name}"){name, groupCode} `);
+    return `{${part}}`;
+}
+//Building GQL script to get customer
+function getCustomerScript(customer) {
+    return `{getEntity(type:"${customer.type}",name:"${customer.name}"){type,name,customData{name,value},states{stateName,state}}}`;
+}
+
+//Building GQL script to check if customer exists.
+function getIsEntityExistsScript(customer) {
+    return `{isEntityExists(type:"${customer.type}",name:"${customer.name}")}`;
+}
+//Building GQL script to add a new customer.
+function getAddCustomerScript(customer) {
+    return `
+    mutation m{addEntity(entity:{
+        entityType:"${customer.type}",name:"${customer.name}"${customer.customData}})
+        {name}
+    }`;
+}
+//Building GQL script to set new customer state to unconfrimed.
+function getNewCustomerStateScript(customer) {
+    return `mutation m{updateEntityState(entityTypeName:"${customer.type}",entityName:"${customer.name}",state:"Unconfirmed",stateName:"CStatus"){name}}`;
+}
+//Build order tags to SambaPOS format.
+function GetOrderTags(order) {
+    if (order.options) {
+        var options = order.options.map(x => {
+			if(x.group_name.includes("Salmon Type"))
+			{
+				if(x.name.includes("Sockeye"))
+					return `{tagName:"Salmon Type",tag:"Sal > Sockeye",price:${x.price},quantity:${x.quantity}}`;
+				else return;
+			}
+			else if(x.group_name === "Rolls")
+				return `{tagName:"Combo Rolls",tag:"${x.name}",price:${x.price},quantity:${x.quantity}}`;
+			return `{tagName:"Default",tag:"${x.group_name}:${x.name}",price:${x.price},quantity:${x.quantity}}`;});
+        if (order.instructions && order.instructions !== '') {
+			order.instructions = order.instructions.replace(/\n/g, '  ');
+            options.push(`{tagName:"Default",tag:"Instructions: ${order.instructions}"}`);
+        }
+		if(order.sambaName === miscProductName)
+		{
+			options.push(`{tagName:"Item Name",tag:"${order.name}"}`);
+		}
+        var result = options.join();
+        return `tags:[${result}],`
+    }
+    return "";
+}
+//Return portions in SambaPOS format.
+function GetPortions(order) {
+    if (order.portions.length != 0) {
+		var portions = order.portions.map(x => `portion:"${x.name}",` );
+        var result = portions.join();
+        return `${result}`
+    } 
+    return "";  
+}
+//Return price in SambaPOS format.
+function GetOrderPrice(order) {
+	if(order.portions.length !=0){
+		var price = order.portions.map(x => `price:${Math.abs((x.price) + (order.price))},`);
+        var result = price.join();
+        return `${result}`;
+        }
+	return `price:${order.price},`;
+}
+//Building GQL script to add new tickets. Will take orders, customers, instructions, pickup time, service charges, and ticket type as arguments.
+function getAddTicketScript(orders, customer, instructions, fulfill_at, services, type) {
+    var orderLines = orders.filter(x => x.groupCode != 'Temporary open hours!!!!').map(order => {
+        return `{
+            name:"${order.sambaName ? order.sambaName : order.name}",
+            menuItemName:"${order.sambaName === miscProductName ? miscProductName : ''}",
+            quantity:${order.quantity > 0 ? order.quantity : 1},
+            ${GetPortions(order)}
+            ${GetOrderPrice(order)}
+            ${GetOrderTags(order)}
+            states:[
+                {stateName:"Status",state:"Submitted"}]
+        }`;
+    });
+
+    var entityPart = customer
+        ? `entities:[{entityType:"${customer.type}",name:"${customer.name}"}],`:'';
+    var calculationsPart = services
+        ? `calculations:[${services.map(x => `{name:"${x.name}",amount:${x.amount}}`).join()}],`
+        : '';
+	
+	var coeff = 1000 * 60 * 5;
+	var date = new Date(fulfill_at);
+	date = new Date(Math.round(date.getTime() / coeff) * coeff);
+	
+	var time = `${date.getHours()}:${date.getMinutes()<10?"0"+ date.getMinutes():date.getMinutes()}`;
+	
+    return `
+        mutation m{addTicket(
+            ticket:{type:"${type}",
+                department:"${departmentName}",
+                user:"${userName}",
+                terminal:"${terminalName}",
+                note:"${instructions !== null ? instructions : ''}",
+                ${entityPart}
+                states:[
+                    {stateName:"Status",state:"Unconfirmed"}
+					${date.getDate() != new Date().getDate() ?',{stateName:"Pickup Status",state:"Future"}':''}],
+                tags:[{tagName:"Pickup Date",tag:"${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}"},{tagName:"Pickup Time", tag:"${time}"}],
+                ${calculationsPart}
+                orders:[${orderLines.join()}]
+            }){id}}`;
+} 
