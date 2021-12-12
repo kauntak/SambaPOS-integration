@@ -320,7 +320,7 @@ function buildCurrentTotalTable(data){
     }
     let headers = ["Grand Total"];
     let nameCol = [buildTable(6, undefined, [["SubTotal"],["Total"], ["Count"]], nameOptions)];
-    let valCol = [buildTable(6, undefined, [["$" + round(grandTotalAmount/1.05, 2)]["$" + round(grandTotalAmount, 2)], [grandTotalCount]], valueOptions)];
+    let valCol = [buildTable(6, undefined, [["$" + round(grandTotalAmount/1.05, 2)], ["$" + round(grandTotalAmount, 2)], [grandTotalCount]], valueOptions)];
     let subTable = buildTable(5, headers, [[nameCol, valCol]], options);
     table.unshift(subTable);
     return buildTable(4, undefined, [table], undefined);
