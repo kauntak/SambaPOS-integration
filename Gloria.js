@@ -61,6 +61,10 @@ async function loopGloria() {
 		count = 0;
 		writeToLog('Reading Tickets...');
 	}
+    if(isTest){
+        processTickets(JSON.parse(testBody));
+        return;
+    }
     var tickets = await readTickets();
     if(tickets)
         processTickets(tickets);
@@ -149,7 +153,7 @@ async function processOrder(order) {
     };
 	if(order.instructions)
 		order.instructions = processComment(order.instructions);
-    let sambaCustomer = await samba.loadCustomer(customer);
+    let sambaCustomer = await samba.loadCustomer(customer, phone);
 	let services = order.items
 	    .filter(x => x.type === 'tip' || x.type === 'delivery_fee' || x.type === 'promo_cart')
 	    .filter(x => x.name)
