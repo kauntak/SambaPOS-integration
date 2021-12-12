@@ -300,25 +300,27 @@ function buildCurrentTotalTable(data){
     let grandTotalCount = 0;
     for(let i in data){
         let headers = [i];
-        let nameCol = [];
-        let valCol = [];
+        let nameCol = [["Subtotal"]];
+        let valCol = [0];
         for(let j in data[i]){
             nameCol.push([j]);
             if(j == "Total"){
                 grandTotalAmount += parseFloat(data[i][j]);
+                valCol[0] = parseFloat(data[i][j]);
                 data[i][j] = "$"+data[i][j];
             } 
             else grandTotalCount += parseInt(data[i][j]);
             valCol.push([data[i][j]]);
         }
+        valCol[0] = ["$" + round(valCol[0]/1.05, 2)];
         nameCol = buildTable(6,undefined,nameCol,nameOptions);
         valCol = buildTable(6,undefined,valCol,valueOptions);
         let subTable = buildTable(5,headers,[[nameCol,valCol]], options);
         table.push(subTable);
     }
     let headers = ["Grand Total"];
-    let nameCol = [buildTable(6, undefined, [["Total"], ["Count"]], nameOptions)];
-    let valCol = [buildTable(6, undefined, [["$" + round(grandTotalAmount, 2)], [grandTotalCount]], valueOptions)];
+    let nameCol = [buildTable(6, undefined, [["SubTotal"],["Total"], ["Count"]], nameOptions)];
+    let valCol = [buildTable(6, undefined, [["$" + round(grandTotalAmount/1.05, 2)]["$" + round(grandTotalAmount, 2)], [grandTotalCount]], valueOptions)];
     let subTable = buildTable(5, headers, [[nameCol, valCol]], options);
     table.unshift(subTable);
     return buildTable(4, undefined, [table], undefined);
