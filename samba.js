@@ -343,13 +343,19 @@ function createTicket(customer, items, instructions, fulfill_at, services, type)
 }
 
 //load customer from SambaPOS
-function loadCustomer(customer) {
+function loadCustomer(customer, phone) {
 	return gql( getIsEntityExistsScript(customer) )
-		.then( data => {
+		.then( async data => {
 			if (!data.isEntityExists)
 				return createCustomer(customer);
-			else 
-				return getCustomer(customer);
+			else {
+                let sambaCustomer = await getCustomer(customer);
+                console.log(sambaCustomer);
+                if(phone && sambaCustomer.customData.findIndex(index => index.value == phone) == -1){
+                    return updateCustomerPhone(customer, phone);
+                }
+				return sambaCustomer;
+            }
 		});
 }
 
@@ -368,6 +374,12 @@ function getCustomer(customer) {
 		.then( data => {
 			return data.getEntity;
 		});
+}
+
+//Fix customer phone number
+function updateCustomerPhone(customer, phone){
+    return gql(getUpdateCustomerPhoneScript(customer, phone))
+        .then(data => data.updateEntityCustomData);
 }
 
 //Build GQL script for retreiving items from SambaPOS
@@ -396,6 +408,16 @@ function getAddCustomerScript(customer) {
 function getNewCustomerStateScript(customer) {
     return `mutation m{updateEntityState(entityTypeName:"${customer.type}",entityName:"${customer.name}",state:"Unconfirmed",stateName:"CStatus"){name}}`;
 }
+
+//Building GQL script to update customer phone number.
+function getUpdateCustomerPhoneScript(customer, phone){
+    return `mutation updatePhone{updateEntityCustomData(entityTypeName:"${customer.type}", 
+    entityName:"${customer.name}",
+    name:"Phone",
+    value: "${phone}"
+  ){type,name,customData{name,value},states{stateName,state}}}`;
+}
+
 //Build order tags to SambaPOS format.
 function GetOrderTags(order) {
     if (order.options) {
