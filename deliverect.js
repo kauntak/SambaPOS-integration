@@ -64,7 +64,7 @@ async function start(testing){
 //will check total orders, if 0 return
 //for each order that is received it will check the order status and call the required function.
 //after orders have been processed, the orders will be inserted into DeliverectOrders database
-async function processDeliverect(data) {
+async function processDeliverect(data, orderUID) {
 	writeToLog(data);
 	return;
 	if (data["_meta"].total == 0 ) return;
@@ -78,7 +78,7 @@ async function processDeliverect(data) {
 		else if(order.status == 90)
 			finalizeOrder(order)
 	});
-	await sql.connect(sql.insertIntoDeliverectDB(insertData));
+	await sql.connect(sql.insertIntoDeliverectDB(insertData, orderUID));
 }
 
 //split ticket into Ticket Details, items, and customer, will create ticket, and return an object that can be inserted into DeliverectOrder database
