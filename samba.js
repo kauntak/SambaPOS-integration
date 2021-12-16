@@ -333,8 +333,8 @@ function loadItems(items) {
 		});
 }
 //creating a SambaPOS ticket from customer, items, ticket note, fulfilment time, service fees, and ticekt type
-function createTicket(customer, items, instructions, fulfill_at, services, type) {
-    return gql(getAddTicketScript(items, customer, instructions, fulfill_at, services, type))
+function createTicket(customer, items, instructions, pickupTime, services, type) {
+    return gql(getAddTicketScript(items, customer, instructions, pickupTime, services, type))
 		.then( data => {
             var ticketId = data.addTicket.id;
             gql('mutation m {postTicketRefreshMessage(id:0){id}}');
@@ -466,7 +466,7 @@ function GetOrderPrice(order) {
 	return `price:${order.price},`;
 }
 //Building GQL script to add new tickets. Will take orders, customers, instructions, pickup time, service charges, and ticket type as arguments.
-function getAddTicketScript(orders, customer, instructions, fulfill_at, services, type) {
+function getAddTicketScript(orders, customer, instructions, pickupTime, services, type) {
     var orderLines = orders.filter(x => x.groupCode != 'Temporary open hours!!!!').map(order => {
         return `{
             name:"${order.sambaName ? order.sambaName : order.name}",
@@ -485,13 +485,12 @@ function getAddTicketScript(orders, customer, instructions, fulfill_at, services
     var calculationsPart = services
         ? `calculations:[${services.map(x => `{name:"${x.name}",amount:${x.amount}}`).join()}],`
         : '';
-	var date;
-    if( !(fulfill_at instanceof Date) ){
-	var coeff = 1000 * 60 * 5;
-	var date = new Date(fulfill_at);
-	date = new Date(Math.round(date.getTime() / coeff) * coeff);
+    if( !(pickupTime instanceof Date) ){
+        pickupTime = new Date(pickupTime);
 	}
-	var time = `${date.getHours()}:${date.getMinutes()<10?"0"+ date.getMinutes():date.getMinutes()}`;
+    var coeff = 1000 * 60 * 5;
+    var pickupDate = new Date(Math.round(pickupTime.getTime() / coeff) * coeff);
+	var time = `${date.getHours()}:${pickupTime.getMinutes()<10?"0"+ pickupTime.getMinutes():pickupTime.getMinutes()}`;
 	
     return `
         mutation m{addTicket(
@@ -503,8 +502,8 @@ function getAddTicketScript(orders, customer, instructions, fulfill_at, services
                 ${entityPart}
                 states:[
                     {stateName:"Status",state:"Unconfirmed"}
-					${date.getDate() != new Date().getDate() ?',{stateName:"Pickup Status",state:"Future"}':''}],
-                tags:[{tagName:"Pickup Date",tag:"${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}"},{tagName:"Pickup Time", tag:"${time}"}],
+					${pickupTime.getDate() != new Date().getDate() ?',{stateName:"Pickup Status",state:"Future"}':''}],
+                tags:[{tagName:"Pickup Date",tag:"${pickupTime.getMonth() + 1}/${pickupTime.getDate()}/${pickupTime.getFullYear()}"},{tagName:"Pickup Time", tag:"${time}"}],
                 ${calculationsPart}
                 orders:[${orderLines.join()}]
             }){id}}`;
