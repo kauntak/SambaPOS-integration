@@ -14,6 +14,9 @@ dotenv.config();
 const gloriaFoodKey = process.env.GLORIAFOOD_KEY;
 const ticketType =  process.env.GLORIAFOOD_TICKET_TYPE;
 const customerEntityType = 'Customers';
+const deliveryFeeCalculation = 'Delivery Service';
+const promotionDiscount = 'Discount';
+const tipCalculation = 'Tip';
 const timeout = 2000;
 //minutes x 60000 milliseconds(1minute)
 const closedTimeout =  30 * 60000;
@@ -158,7 +161,7 @@ async function processOrder(order) {
 	    .filter(x => x.type === 'tip' || x.type === 'delivery_fee' || x.type === 'promo_cart')
 	    .filter(x => x.name)
 	    .map(x => { return { name: getCalculationName(x.type), amount: Math.abs((x.cart_discount_rate) * 100) || x.price}; }) 
-	let items = await samba.loadItems(order.items.map(x => processItem(x)));
+	let items = await samba.loadItems(order.items.map(x => processItem(x)).filter(x => x.type === 'item'));
     await samba.createTicket(sambaCustomer, items, order.instructions, order.fulfill_at, services, ticketType);
     lastQryCompleted = true;
 	return;
