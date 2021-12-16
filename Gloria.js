@@ -14,6 +14,7 @@ dotenv.config();
 const gloriaFoodKey = process.env.GLORIAFOOD_KEY;
 const ticketType =  process.env.GLORIAFOOD_TICKET_TYPE;
 const customerEntityType = 'Customers';
+const departmentName = 'Takeout';
 const deliveryFeeCalculation = 'Delivery Service';
 const promotionDiscount = 'Discount';
 const tipCalculation = 'Tip';
@@ -162,7 +163,7 @@ async function processOrder(order) {
 	    .filter(x => x.name)
 	    .map(x => { return { name: getCalculationName(x.type), amount: Math.abs((x.cart_discount_rate) * 100) || x.price}; }) 
 	let items = await samba.loadItems(order.items.map(x => processItem(x)).filter(x => x.type === 'item'));
-    await samba.createTicket(sambaCustomer, items, order.instructions, order.fulfill_at, services, ticketType);
+    await samba.createTicket(sambaCustomer, items, order.instructions, order.fulfill_at, services, ticketType, departmentName);
     lastQryCompleted = true;
 	return;
 }
