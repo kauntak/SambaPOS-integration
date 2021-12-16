@@ -337,7 +337,7 @@ async function processDeliverect(data, orderUID) {
 async function processOrder(order) {
     var ticketData = createTicketData(order);
 	if(order.note)
-		order.note = processComment(order.note);
+		order.note = processComment(order.note, ticketData.name);
 	else order.note = "";
 	let services;
 	if(order.tip > 0){
@@ -406,8 +406,8 @@ function createTicketData(order){
 
 
 //removed unwanted user input
-function processComment(comment){
-    return comment.replace(/"/g, "'").replace(/\n/g, "  ").replace(/~/g, "-");
+function processComment(comment, name){
+    return comment.replace(/"/g, "'").replace(/\n/g, "  ").replace(/~/g, "-").replace(name, "");
 }
 
 //will process items into a SambaPOS readable item.
