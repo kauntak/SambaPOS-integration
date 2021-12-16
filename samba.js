@@ -26,7 +26,6 @@ const password = process.env.PASSWORD;
 const deliverectOrderTagName = process.env.DELIVERECT_ORDER_TAG_NAME;
 const terminalName = 'Server';
 const miscProductName = 'Misc';
-const departmentName = 'Takeout';
 
 var accessToken = undefined;
 var accessTokenExpires = '';
@@ -333,8 +332,8 @@ function loadItems(items) {
 		});
 }
 //creating a SambaPOS ticket from customer, items, ticket note, fulfilment time, service fees, and ticekt type
-function createTicket(customer, items, instructions, pickupTime, services, type) {
-    return gql(getAddTicketScript(items, customer, instructions, pickupTime, services, type))
+function createTicket(customer, items, instructions, pickupTime, services, type, departmentName) {
+    return gql(getAddTicketScript(items, customer, instructions, pickupTime, services, type, departmentName))
 		.then( data => {
             var ticketId = data.addTicket.id;
             gql('mutation m {postTicketRefreshMessage(id:0){id}}');
@@ -466,7 +465,7 @@ function GetOrderPrice(order) {
 	return `price:${order.price},`;
 }
 //Building GQL script to add new tickets. Will take orders, customers, instructions, pickup time, service charges, and ticket type as arguments.
-function getAddTicketScript(orders, customer, instructions, pickupTime, services, type) {
+function getAddTicketScript(orders, customer, instructions, pickupTime, services, type, departmentName) {
     var orderLines = orders.filter(x => x.groupCode != 'Temporary open hours!!!!').map(order => {
         return `{
             name:"${order.sambaName ? order.sambaName : order.name}",
