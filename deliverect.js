@@ -346,7 +346,7 @@ async function processOrder(order) {
 	}
 	let customer = await samba.loadCustomer(ticketData.entity);
 	let items = await samba.loadItems(order.items.map(item => processItem(item, ticketData.decimalDigits)));
-	ticketData.ticketId = await samba.createTicket(customer, items, order.note, order.time, services, ticketType);
+	ticketData.ticketId = await samba.createTicket(customer, items, order.note, ticketData.time, services, ticketType);
 	return ticketData;
 }
 
