@@ -485,11 +485,12 @@ function getAddTicketScript(orders, customer, instructions, fulfill_at, services
     var calculationsPart = services
         ? `calculations:[${services.map(x => `{name:"${x.name}",amount:${x.amount}}`).join()}],`
         : '';
-	
+	var date;
+    if( !(fulfill_at instanceof Date) ){
 	var coeff = 1000 * 60 * 5;
 	var date = new Date(fulfill_at);
 	date = new Date(Math.round(date.getTime() / coeff) * coeff);
-	
+	}
 	var time = `${date.getHours()}:${date.getMinutes()<10?"0"+ date.getMinutes():date.getMinutes()}`;
 	
     return `
