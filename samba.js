@@ -490,7 +490,7 @@ function getAddTicketScript(orders, customer, instructions, pickupTime, services
 	}
     var coeff = 1000 * 60 * 5;
     var pickupDate = new Date(Math.round(pickupTime.getTime() / coeff) * coeff);
-	var time = `${date.getHours()}:${pickupTime.getMinutes()<10?"0"+ pickupTime.getMinutes():pickupTime.getMinutes()}`;
+	var time = `${pickupTime.getHours()}:${pickupTime.getMinutes()<10?"0"+ pickupTime.getMinutes():pickupTime.getMinutes()}`;
 	
     return `
         mutation m{addTicket(
