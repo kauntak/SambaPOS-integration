@@ -422,7 +422,11 @@ function getUpdateCustomerPhoneScript(customer, phone){
 //Build order tags to SambaPOS format.
 function GetOrderTags(order) {
     if (order.options) {
-        var options = order.options.map(x => {
+        let options = [];
+		if(order.sambaName === miscProductName){
+			options.push(`{tagName:"Item Name",tag:"${order.name}"}`);
+		}
+        options = options.concat(order.options.map(x => {
 			if(x.group_name.includes("Salmon Type"))
 			{
 				if(x.name.includes("Sockeye"))
@@ -433,15 +437,11 @@ function GetOrderTags(order) {
 				return `{tagName:"Combo Rolls", tag:"${x.name}", price:${x.price}, quantity:${x.quantity}}`;
             else if(x.group_name == deliverectOrderTagName)
                 return `{tagName:"${deliverectOrderTagName}", tag:"${x.name}", price:${x.price}, quantity:${x.quantity}}`;
-			return `{tagName:"Default", tag:"${x.group_name}:${x.name}", price:${x.price}, quantity:${x.quantity}}`;});
+			return `{tagName:"Default", tag:"${x.group_name}:${x.name}", price:${x.price}, quantity:${x.quantity}}`;}));
         if (order.instructions && order.instructions !== '') {
 			order.instructions = order.instructions.replace(/\n/g, '  ');
             options.push(`{tagName:"Default", tag:"Instructions: ${order.instructions}"}`);
         }
-		if(order.sambaName === miscProductName)
-		{
-			options.push(`{tagName:"Item Name",tag:"${order.name}"}`);
-		}
         var result = options.join();
         return `tags:[${result}],`
     }
@@ -502,8 +502,8 @@ function getAddTicketScript(orders, customer, instructions, pickupTime, services
                 ${entityPart}
                 states:[
                     {stateName:"Status",state:"Unconfirmed"}
-					${pickupTime.getDate() != new Date().getDate() ?',{stateName:"Pickup Status",state:"Future"}':''}],
-                tags:[{tagName:"Pickup Date",tag:"${pickupTime.getMonth() + 1}/${pickupTime.getDate()}/${pickupTime.getFullYear()}"},{tagName:"Pickup Time", tag:"${time}"}],
+					${pickupDate.getDate() != new Date().getDate() ?',{stateName:"Pickup Status",state:"Future"}':''}],
+                tags:[{tagName:"Pickup Date",tag:"${pickupDate.getMonth() + 1}/${pickupDate.getDate()}/${pickupDate.getFullYear()}"},{tagName:"Pickup Time", tag:"${time}"}],
                 ${calculationsPart}
                 orders:[${orderLines.join()}]
             }){id}}`;
