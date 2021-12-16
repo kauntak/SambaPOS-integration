@@ -23,6 +23,7 @@ const serverKey = process.env.SERVER_KEY;
 
 const userName = process.env.USERNAME;
 const password = process.env.PASSWORD;
+const deliverectOrderTagName = process.env.DELIVERECT_ORDER_TAG_NAME;
 const terminalName = 'Server';
 const miscProductName = 'Misc';
 const departmentName = 'Takeout';
@@ -315,7 +316,7 @@ function loadItems(items) {
     var script = getLoadItemsScript(items);
     return gql(script)
 		.then(data => {
-			return (items.filter(x => x.type === 'item').map(item => {
+			return (items.map(item => {
 				return {
 					id: item.id,
 					name: item.name,
@@ -425,15 +426,17 @@ function GetOrderTags(order) {
 			if(x.group_name.includes("Salmon Type"))
 			{
 				if(x.name.includes("Sockeye"))
-					return `{tagName:"Salmon Type",tag:"Sal > Sockeye",price:${x.price},quantity:${x.quantity}}`;
+					return `{tagName:"Salmon Type", tag:"Sal > Sockeye", price:${x.price}, quantity:${x.quantity}}`;
 				else return;
 			}
 			else if(x.group_name === "Rolls")
-				return `{tagName:"Combo Rolls",tag:"${x.name}",price:${x.price},quantity:${x.quantity}}`;
-			return `{tagName:"Default",tag:"${x.group_name}:${x.name}",price:${x.price},quantity:${x.quantity}}`;});
+				return `{tagName:"Combo Rolls", tag:"${x.name}", price:${x.price}, quantity:${x.quantity}}`;
+            else if(x.group_name == deliverectOrderTagName)
+                return `{tagName:"${deliverectOrderTagName}", tag:"${x.name}", price:${x.price}, quantity:${x.quantity}}`;
+			return `{tagName:"Default", tag:"${x.group_name}:${x.name}", price:${x.price}, quantity:${x.quantity}}`;});
         if (order.instructions && order.instructions !== '') {
 			order.instructions = order.instructions.replace(/\n/g, '  ');
-            options.push(`{tagName:"Default",tag:"Instructions: ${order.instructions}"}`);
+            options.push(`{tagName:"Default", tag:"Instructions: ${order.instructions}"}`);
         }
 		if(order.sambaName === miscProductName)
 		{
