@@ -12,6 +12,7 @@ dotenv.config();
 const paymentType = process.env.DELIVERECT_PAYMENT_TYPE;
 const ticketType = process.env.DELIVERECT_TICKET_TYPE;
 const deliverectOrderTagName = process.env.DELIVERECT_ORDER_TAG_NAME;
+const departmentName = process.env.DELIVERECT_DEPARTMENT_NAME
 const tipCalculation = 'Tip';
 const miscProductName = 'Misc';
 
@@ -346,7 +347,7 @@ async function processOrder(order) {
 	}
 	let customer = await samba.loadCustomer(ticketData.entity);
 	let items = await samba.loadItems(order.items.map(item => processItem(item, ticketData.decimalDigits)));
-	ticketData.ticketId = await samba.createTicket(customer, items, order.note, ticketData.time, services, ticketType);
+	ticketData.ticketId = await samba.createTicket(customer, items, order.note, ticketData.time, services, ticketType, departmentName);
 	return ticketData;
 }
 
