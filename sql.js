@@ -53,12 +53,13 @@ function query(qry){
 			if(err)	reject(err);
 			else{
 				writeToLog('Connected To DB.');
+				let res = [];
 				Rqst = new Request(qry,(err,rowCount,rows) => {
 					if(err){
 						connection.close();
 						reject(err);
 					} else {
-						writeToLog(`Result: ${res}`);
+						writeToLog(`Result: ${JSON.stringify(res, undefined, 2)}`);
 						connection.close();
 						resolve(res);
 					}

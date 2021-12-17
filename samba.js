@@ -2,7 +2,7 @@
 
 
 
-module.exports = {isOpen, gql, updateGlobalSetting, getGlobalSetting, getOpenTickets, openTerminal, closeTerminal, payTicket, closeTicket, loadCustomer, loadItems, createTicket }; //Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket, getCheckHoldOrders};
+module.exports = {isOpen, gql, updateGlobalSetting, getGlobalSetting, getOpenTickets, broadcast, openTerminal, closeTerminal, loadTicket, executeTicketAutomationCommand, payTicket, closeTicket, loadCustomer, loadItems, createTicket }; //Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket, getCheckHoldOrders};
 
 const request = require('request');
 const querystring = require('querystring');
@@ -279,6 +279,11 @@ function broadcast(msg){
     return gql(getPostBroadcastScript(msg));
 }
 
+function executeTicketAutomationCommand(terminalId, command, returnVal){
+    return gql(getExecuteTicketAutomationCommandScript(terminalId, command, returnVal))
+        .then(data => data.executeAutomationCommandForTerminalTicket[returnVal]);
+}
+
 function getOpenTicketsScript(){
 	return `{getTickets(isClosed: false) {id, type, remainingAmount, states{state, stateName}, tags{tag, tagName}, entities{name}}}`;
 }
@@ -308,6 +313,10 @@ function getPostBroadcastScript(msg){
 
 function getCloseTerminalScript(terminalId){
 	return `mutation unregister {unregisterTerminal(terminalId: "${terminalId}")}`;
+}
+
+function getExecuteTicketAutomationCommandScript(terminalId, command, returnVal){
+    return `mutation command {executeAutomationCommandForTerminalTicket(terminalId:"${terminalId}" name:"${command}"){${returnVal}}}`;
 }
 
 //load items from SambaPOS and return an item object.

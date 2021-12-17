@@ -22,6 +22,8 @@ var lastReadTime;
 
 var isTest = false;
 
+
+var idList = [];
 var entities = {
 	"10": Skip,
 	"12": Door
@@ -45,248 +47,7 @@ function Door(data){
 	};
 }
 
-var testBody = {
-	"_id": "61ba5c8a92a410f539359b3a",
-	"_created": "2021-12-15T21:22:18.671000Z",
-	"_updated": "2021-12-15T21:22:22.203000Z",
-	"_etag": "",
-	"account": "615f77ac4b260a6857698250",
-	"channelOrderId": "TEST1639603339",
-	"channelOrderDisplayId": "TEST1639603339",
-	"posId": "",
-	"posReceiptId": "",
-	"posLocationId": "",
-	"status": 20,
-	"statusHistory": [
-	  {
-		"timeStamp": "2021-12-15T21:22:18.823000Z",
-		"status": 4,
-		"response": "",
-		"source": 2
-	  },
-	  {
-		"timeStamp": "2021-12-15T21:22:18.826000Z",
-		"status": 1,
-		"response": "",
-		"source": 5
-	  },
-	  {
-		"status": 3,
-		"source": 5,
-		"timeStamp": "2021-12-15T21:22:19.017000Z",
-		"response": ""
-	  },
-	  {
-		"timeStamp": "2021-12-15T21:22:19.043000Z",
-		"status": 1,
-		"response": "",
-		"source": 1
-	  },
-	  {
-		"timeStamp": "2021-12-15T21:22:20Z",
-		"status": 6,
-		"response": "Device ID: 7bca4edee2349179",
-		"source": 3
-	  },
-	  {
-		"timeStamp": "2021-12-15T21:22:22Z",
-		"status": 10,
-		"response": "",
-		"source": 3
-	  },
-	  {
-		"timeStamp": "2021-12-15T21:22:26Z",
-		"status": 20,
-		"response": "",
-		"source": 3
-	  }
-	],
-	"packaging": {
-	  "includeCutlery": false
-	},
-	"channelStatusHistory": [],
-	"by": "Deliverect",
-	"orderType": 2,
-	"channel": 10,
-	"pos": 20000,
-	"rating": [],
-	"pickupTime": "2021-12-15T21:22:19Z",
-	"deliveryTime": "2021-12-15T21:22:19Z",
-	"deliveryIsAsap": true,
-	"courier": {
-	  "deliveryBy": "restaurant"
-	},
-	"customer": {
-	  "name": "Non K",
-	  "companyName": "Big Catch",
-	  "phoneNumber": "+14037085555",
-	  "email": "eats@bigcatchcalgary.ca",
-	  "note": ""
-	},
-	"deliveryAddress": {
-	  "street": "The Krook",
-	  "streetNumber": "4",
-	  "postalCode": "8888KL",
-	  "city": "Gent",
-	  "extraAddressInfo": ""
-	},
-	"orderIsAlreadyPaid": true,
-	"taxes": [
-	  {
-		"name": "taxes",
-		"taxClassId": 0,
-		"total": 1107
-	  }
-	],
-	"taxTotal": 1107,
-	"payment": {
-	  "amount": 27077,
-	  "type": 0,
-	  "due": 0
-	},
-	"note": "This is a test order \"test\"",
-	"items": [
-	  {
-		"plu": "46774688",
-		"name": "★Chef's Choice Sashimi 12pc",
-		"sortOrder": 0,
-		"price": 4265,
-		"quantity": 1,
-		"productType": 1,
-		"isInternal": false,
-		"subItems": []
-	  },
-	  {
-		"plu": "46774892",
-		"name": "Atlantic Salmon Nigiri",
-		"sortOrder": 0,
-		"price": 320,
-		"quantity": 12,
-		"productType": 1,
-		"isInternal": false,
-		"subItems": []
-	  },
-	  {
-		"plu": "46770005",
-		"name": "Sprout 2-3ppl",
-		"sortOrder": 0,
-		"price": 6120,
-		"quantity": 1,
-		"productType": 1,
-		"isInternal": false,
-		"subItems": [
-		  {
-			"plu": "M-SO-CVXz-161",
-			"name": "Sockeye Salmon(Wild)",
-			"sortOrder": 0,
-			"price": 455,
-			"quantity": 1,
-			"productType": 2,
-			"isInternal": false,
-			"subItems": []
-		  }
-		]
-	  },
-	  {
-		"plu": "46769986",
-		"name": "Green Halo",
-		"sortOrder": 0,
-		"price": 1910,
-		"quantity": 1,
-		"productType": 1,
-		"isInternal": false,
-		"subItems": [
-		  {
-			"plu": "M-SO-YXIz-8",
-			"name": "Sockeye Salmon(Wild)",
-			"sortOrder": 0,
-			"price": 225,
-			"quantity": 1,
-			"productType": 2,
-			"isInternal": false,
-			"subItems": []
-		  }
-		]
-	  },
-	  {
-		"plu": "46769986",
-		"name": "Green Halo",
-		"sortOrder": 0,
-		"price": 1910,
-		"quantity": 1,
-		"productType": 1,
-		"isInternal": false,
-		"subItems": []
-	  },
-	  {
-		"plu": "46770008",
-		"name": "Prawn Tempura",
-		"sortOrder": 0,
-		"price": 1305,
-		"quantity": 1,
-		"productType": 1,
-		"isInternal": false,
-		"subItems": []
-	  },
-	  {
-		"plu": "140031761",
-		"name": "★Sweet Potato Panna Cotta",
-		"sortOrder": 0,
-		"price": 460,
-		"quantity": 1,
-		"productType": 1,
-		"isInternal": false,
-		"subItems": []
-	  },
-	  {
-		"plu": "1190275063",
-		"name": "Sapporo Bottle - 3 pack",
-		"sortOrder": 0,
-		"price": 1740,
-		"quantity": 1,
-		"productType": 1,
-		"isInternal": false,
-		"subItems": []
-	  },
-	  {
-		"plu": "1190275064",
-		"name": "Sapporo Bottle",
-		"sortOrder": 0,
-		"price": 725,
-		"quantity": 1,
-		"productType": 1,
-		"isInternal": false,
-		"subItems": []
-	  },
-	  {
-		"plu": "1190275066",
-		"name": "Masumi White 300ml",
-		"sortOrder": 0,
-		"price": 3015,
-		"quantity": 1,
-		"productType": 1,
-		"isInternal": false,
-		"subItems": []
-	  }
-	],
-	"decimalDigits": 2,
-	"numberOfCustomers": 1,
-	"channelOrderRawId": "61ba5c8ab19a2853dc7cd58d",
-	"serviceCharge": 0,
-	"deliveryCost": 0,
-	"bagFee": 0,
-	"tip": 0,
-	"driverTip": 0,
-	"discountTotal": 0,
-	"posCustomerId": "",
-	"historyDriverUpdates": [],
-	"capacityUsages": [],
-	"trackPOSId": false,
-	"recent": true,
-	"resolvedBy": "",
-	"brandId": "615f77ac4b260a685769824f",
-	"testOrder": true
-  };
+var testBody = {};
 var lastBody;
 var lastQryCompleted = true;
 
@@ -299,7 +60,7 @@ function writeToLog(content){
 function writeToErrorLog(content){
 	log.write("Deliverect_Error", content);
 }
-start();
+//start();
 //Originally for testing, will be removed
 //TODO remove.
 async function start(testing){
@@ -316,21 +77,22 @@ async function start(testing){
 //will check total orders, if 0 return
 //for each order that is received it will check the order status and call the required function.
 //after orders have been processed, the orders will be inserted into DeliverectOrders database
-async function processDeliverect(data, orderUID) {
-	writeToLog(data);
-	return;
-	if (data["_meta"].total == 0 ) return;
-	let insertData = [];
-    data["_items"].forEach(async (order) => {
-		if(order.status == 20 || order.status == 120){
-			let resData = await processOrder(order);
-			insertData.push(resData);
-		}else if(order.status == 100)
-			cancelOrder(order);
-		else if(order.status == 90)
-			finalizeOrder(order)
-	});
-	await sql.connect(sql.insertIntoDeliverectDB(insertData, orderUID));
+async function processDeliverect(order, orderUID) {
+	if(order.status == 20 || order.status == 120){
+		if(idList.find(id => id == order["_id"])) 
+			return;
+		idList.push(order["_id"]);
+		if(idList.length > 50)
+			idList.shift();
+		{
+			let insertData = {orderUID:orderUID, deliverectId:order["_id"]};
+			insertData.ticketId = await processOrder(order);
+			await insertIntoDeliverectDB(insertData);
+		}
+	} else if(order.status == 100) {
+		return;
+		//cancelOrder(order);
+	} else if(order.status == 90) finalizeOrder(order);
 }
 
 //split ticket into Ticket Details, items, and customer, will create ticket, and return an object that can be inserted into DeliverectOrder database
@@ -347,18 +109,28 @@ async function processOrder(order) {
 	}
 	let customer = await samba.loadCustomer(ticketData.entity);
 	let items = await samba.loadItems(order.items.map(item => processItem(item, ticketData.decimalDigits)));
-	ticketData.ticketId = await samba.createTicket(customer, items, order.note, ticketData.time, services, ticketType, departmentName);
-	return ticketData;
+	let ticketId = await samba.createTicket(customer, items, order.note, ticketData.time, services, ticketType, departmentName);
+	return ticketId;
 }
 
 
-//TODO: Cancel order, void ticket/orders from SambaPOS, update Kitchen Display Task
+//void ticket/orders from SambaPOS, update Kitchen Display Tasks to Show Cancelled
 async function cancelOrder(order){
-	return;
+	let ticketData = await getTicketData(order.orderId);
+	if(!ticketData || ticketData.isCancelled) return;
+	writeToLog(`Cancelling order ${order.orderId} Ticket:${ticketData.ticketId}`);
+	await updateDisplaysAsCancelled(ticketData);
+	await voidTicket(ticketData);
+	await updateTicketData(ticketData.ticketId,"isCancelled", 1);
 }
-//TODO: Settle corresponding ticket
-function finalizeOrder(order){
-	return;
+//TODO: remove delivery upcharge from ticket price amd settle corresponding ticket, 
+async function finalizeOrder(order){
+	let ticketData = await getTicketData(order.orderId);
+	if(!ticketData || ticketData.isCompleted) return;
+	writeToLog(`Finalizing order ${order.orderId} Ticket:${ticketData.ticketId}`);
+	await changeTicketPrice(ticketData);
+	await payTicket(ticketData);
+	await updateTicketData(ticketData.ticketId, "isCompleted",1)
 }
 
 //will return an object with
@@ -407,7 +179,7 @@ function createTicketData(order){
 
 //removed unwanted user input
 function processComment(comment, name){
-    return comment.replace(/"/g, "'").replace(/\n/g, "  ").replace(/~/g, "-").replace(name, "");
+    return comment.replace(/"/g, "'").replace(/\n/g, "  ").replace(/~/g, "-").replace(name, "").replace("[CONTACTLESS] ", "");
 }
 
 //will process items into a SambaPOS readable item.
@@ -431,28 +203,175 @@ function processItem(item, digits) {
     };
 }
 
-//load items from SambaPOS and return an item object.
-function loadItems(items) {
-    return samba.gql(getLoadItemsScript(items))
-		.then(data => {
-			return (items.map(item => {
-				return {
-					id: item.id,
-					name: item.name,
-					type: item.type,
-					sambaName: data[`i${item.id}`]===null ? miscProductName : data[`i${item.id}`].name,
-					price: item.price,
-					quantity: item.quantity,
-					instructions: item.instructions,
-					options: item.options,
-					portions: item.portions,
-					groupCode: data[`i${item.id}`]===null ? miscProductName : data[`i${item.id}`].groupCode
-				}
-			}));
-		});
+function insertIntoDeliverectDB(data){
+	let qry = `
+		INSERT INTO in_deliverect_orders(posId, deliverectId, ticketId, isCancelled, isCompleted)
+		SELECT '${data.orderUID}', '${data.deliverectId}', ${data.ticketId}, 0, 0
+		WHERE NOT EXISTS(
+			SELECT * FROM in_deliverect_orders WHERE deliverectId = '${data.deliverectId}'
+		)`;
+	return sql.exec(qry);
 }
-//Build GQL script for retreiving items from SambaPOS
-function getLoadItemsScript(items) {
-    var part = items.map(item => `i${item.id}: getProduct(name:"${item.name}"){name, groupCode} `);
-    return `{${part}}`;
+
+//Get the SambaPOS ticket data for the corresponding order
+function getTicketData(orderId){
+	let qry = `
+		SELECT ticketId, ticketNumber, isCancelled, in_deliverect_orders.isCompleted
+		FROM in_deliverect_orders
+		JOIN Tickets on Tickets.Id = ticketId
+		WHERE deliverectId = '${orderId}'`;
+	return sql.query(qry)
+		.then(res => res[0]);
+}
+
+function updateTicketData(ticketId, name, state){
+	if( !(name instanceof Array) ) name = [name];
+	let stringArray = [];
+	for(let i in name){
+		stringArray.push(`${name[i]} = ${state instanceof Array? state[i] : state}`);
+	}
+	let qry = `
+		UPDATE in_deliverect_orders
+		SET ${stringArray.toString()}
+		WHERE ticketId = ${ticketId}`;
+	return sql.exec(qry);
+}
+
+//update the Kitchen Displays, to label the order as cancelled.
+async function updateDisplaysAsCancelled(data){
+	let qry = `
+		UPDATE Tasks
+		SET [Content] = CONCAT([CONTENT], CHAR(10), '<color red><bold><size 22>CANCELLED</size></bold></color>')`
+	//qry += `WHERE Identifier = '${data.ticketNumber}'`;
+	qry += `WHERE Name = '${data.ticketNumber}'`;
+	await sql.exec(qry);
+	qry = `
+		SELECT TaskTypes.Name as Name
+		FROM [SambaPOS5].[dbo].[Tasks]
+		JOIN TaskTypes on TaskTypeId = TaskTypes.Id
+		WHERE Tasks.Name = '${data.ticketNumber}'
+		AND SubOf IS NULL
+		`;
+	let displays = await sql.query(qry);
+	for(let i in displays){
+		let displayChar = displays[i].Name.charAt(0);
+		await samba.broadcast(`Order Sent ${displayChar}DS`);
+	}
+}
+
+//Void all order items on ticket, and settle ticket.
+function voidTicket(data){
+	let qry = `
+	BEGIN
+		UPDATE Orders
+			`
+
+	return ;
+	
+	// samba.openTerminal()
+	// .then(terminalId => samba.loadTicket(terminalId, data.ticketId)
+	// 	.then(id => samba.executeTicketAutomationCommand(terminalId, "Void All Items", "id")
+	// 		.then(id => samba.closeTicket(terminalId)
+	// 			.then(() => {
+	// 				samba.closeTerminal();
+					
+	// 			})
+	// 		)
+	// 	)
+	// );
+}
+
+//changes ticket price to takeout price amount(removes delivery upcharge)
+function changeTicketPrice(data){
+	let qry = `
+	DECLARE @TICKET_ID int = ${data.ticketId}
+
+	UPDATE Orders
+		SET OrderTags = REPLACE(OrderTags, value, REPLACE(value, ',"PR":' + CAST(PR as nvarchar) + ',', ',"PR":' + CAST(CAST(PR/1.16 as decimal(16,2)) as nvarchar) + ','))
+	FROM Orders
+	CROSS APPLY OPENJSON(OrderTags, '$') tags
+	CROSS APPLY OPENJSON(tags.value) WITH(
+		TN nvarchar(50),
+		TV nvarchar(50),
+		PR decimal(16,2)
+	) vals
+	WHERE PR IS NOT NULL
+	AND OrderTags != ''
+	AND OrderTags IS NOT NULL
+	AND TicketId = @TICKET_ID
+
+
+	UPDATE Orders
+	SET
+		PriceTag = 
+			CASE
+				WHEN PriceTag IS NULL THEN NULL
+				ELSE 'Takeout'
+			END,
+		
+		LastUpdateDateTime = CURRENT_TIMESTAMP,
+		Price = CAST((
+				ISNULL(
+					(SELECT 
+						CASE
+							WHEN MenuItemPrices.Price != 0 THEN MenuItemPrices.Price
+							WHEN MenuItemPrices.Price IS NULL THEN o1.price/1.16
+							ELSE o1.Price / 1.16
+						END
+					FROM MenuItemPrices 
+					JOIN MenuItemPortions ON MenuItemPrices.MenuItemPortionId = MenuItemPortions.Id
+					WHERE MenuItemPortions.Name = o1.PortionName
+					AND MenuItemPortions.MenuItemId = o1.MenuItemId
+					AND MenuItemPrices.PriceTag = 'Takeout'
+					), 0) + 
+				ISNULL(
+					(SELECT
+						SUM(PR)
+					FROM Orders as o2
+					CROSS APPLY OPENJSON(o2.OrderTags, '$') tags
+					CROSS APPLY OPENJSON(tags.value) WITH(
+						TN nvarchar(50),
+						TV nvarchar(50),
+						PR decimal(16,2)
+					) vals
+					WHERE PR IS NOT NULL
+					AND o2.OrderTags != ''
+					AND o2.OrderTags IS NOT NULL
+					AND o2.id = o1.id
+					), 0)
+
+			) as decimal(16,2))
+	FROM Orders as o1
+	WHERE TicketId = @TICKET_ID
+
+	DECLARE @ITEM_TOTAL_PRICE decimal(16,2)
+
+	SELECT @ITEM_TOTAL_PRICE=SUM(Price * Quantity)
+	FROM Orders
+	WHERE TicketId = @TICKET_ID
+
+	UPDATE Tickets
+	SET TotalAmountPreTax = @ITEM_TOTAL_PRICE,
+	LastUpdateTime = CURRENT_TIMESTAMP,
+	TicketVersion = CURRENT_TIMESTAMP,
+	TotalAmount = @ITEM_TOTAL_PRICE * 1.05,
+	RemainingAmount = @ITEM_TOTAL_PRICE * 1.05
+	WHERE Id = @TICKET_ID
+
+	`;
+	return sql.exec(qry);
+	// samba.openTerminal()
+	// .then(terminalId => samba.loadTicket(terminalId, data.ticketId)
+	// 	.then(() => samba.executeTicketAutomationCommand(terminalId, "Change Price to Takeout", "remainingAmount")
+	// 		.then(remainingAmount => samba.closeTicket(terminalId)
+	// 			.then(() => samba.closeTerminal(()=> remainingAmount))
+	// 		)
+	// 	)
+	// );
+};
+
+
+function payTicket(data){
+	let amount = `(SELECT RemainingAmount FROM Tickets WHERE Id = ${data.ticketId})`
+	return sql.payTicket(data.ticketId, amount, paymentType);
 }
