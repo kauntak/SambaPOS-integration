@@ -78,6 +78,7 @@ async function start(testing){
 //for each order that is received it will check the order status and call the required function.
 //after orders have been processed, the orders will be inserted into DeliverectOrders database
 async function processDeliverect(order, orderUID) {
+	writeToLog(JSON.stringify(order, undefined, 2));
 	if(order.status == 20 || order.status == 120){
 		if(idList.find(id => id == order["_id"])) 
 			return;
@@ -90,8 +91,7 @@ async function processDeliverect(order, orderUID) {
 			await insertIntoDeliverectDB(insertData);
 		}
 	} else if(order.status == 100) {
-		return;
-		//cancelOrder(order);
+		cancelOrder(order);
 	} else if(order.status == 90) finalizeOrder(order);
 }
 
@@ -262,11 +262,43 @@ async function updateDisplaysAsCancelled(data){
 //Void all order items on ticket, and settle ticket.
 function voidTicket(data){
 	let qry = `
-	BEGIN
-		UPDATE Orders
-			`
+	DECLARE @TICKET_ID int = ${data.ticketId}
 
-	return ;
+	UPDATE Orders
+	SET
+		OrderStates = REPLACE(OrderStates, value, REPLACE(value, '"S":"'+ S + '",', '"S":"Void",')),
+		CalculatePrice = 0,
+		DecreaseInventory = 0,
+		LastUpdateDateTime = CURRENT_TIMESTAMP
+	FROM Orders as o2
+	CROSS APPLY OPENJSON(o2.OrderStates, '$') states
+	CROSS APPLY OPENJSON(states.value) WITH(
+		SN nvarchar(50),
+		S nvarchar(50)
+	) vals
+	WHERE SN = 'GStatus'
+	AND TicketId = @TICKET_ID
+
+	UPDATE Tickets
+	SET 
+		LastUpdateTime = CURRENT_TIMESTAMP,
+		TicketVersion = CURRENT_TIMESTAMP,
+		IsClosed = 1,
+		RemainingAmount = 0,
+		TotalAmount = 0,
+		TotalAmountPreTax = 0,
+		TicketStates = REPLACE(TicketStates, value, REPLACE(value, '"S":'+S+'",', '"S":"Paid",')),
+		IsCompleted = 1
+	FROM Tickets
+	CROSS APPLY OPENJSON(TicketStates, '$') states
+	CROSS APPLY OPENJSON(states.value) WITH(
+		SN nvarchar(50),
+		S nvarchar(50)
+	) vals
+	WHERE SN = 'Status'
+	AND Id = @TICKET_ID`
+	
+	return sql.exec(qry);
 	
 	// samba.openTerminal()
 	// .then(terminalId => samba.loadTicket(terminalId, data.ticketId)
