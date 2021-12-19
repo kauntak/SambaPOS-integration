@@ -6,12 +6,11 @@ const request = require('request');
 const samba = require('./samba');
 const sql = require('./sql');
 const log = require('./log');
-const dotenv = require('dotenv');
-dotenv.config();
+const config = require('./config/config');
 
-const cloverMID = process.env.CLOVER_MID;
-const cloverKey = process.env.CLOVER_KEY;
-const paymentType = process.env.CLOVER_PAYMENT_TYPE;
+const cloverMID = config.Clover.merchantId;
+const cloverKey = config.Clover.key;
+const paymentType = config.Clover.paymentType;
 //how long to pause between loop iteration
 //minutes x 60000 milliseconds(1minute)
 const timeout = 6 * 60000;
@@ -101,15 +100,17 @@ async function start(testing){
 //Insert payment data into database.
 //Will clear payment data other than the payments that failed.
 async function loopClover(){
-	let date = await getCloverLastRead(delay + (timeout / 60000));
-	paymentData = paymentData.concat(await Promise.all(processData(await getPaymentData(date))));
+	loadPayments();
+	
 	if(paymentData.length == 0 ){
 		await setCloverLastRead();
 		return;
 	}
-	writeToLog("Payments: " + JSON.stringify(paymentData, undefined, 2));
-	let tickets = await getOpenTakeoutTickets();
-	writeToLog("Tickets: " + JSON.stringify(tickets, undefined, 2));
+	let tickets = await getOpenTickets();
+	if(tickets.length == 0){
+		await setCloverLastRead();
+		return;
+	}
 	let unpaid = [];
 	for(let i in paymentData) { //Will check if open tickets have same amount as paid amount, and close said ticket. Payments that were not found will be added to an unpaid array.
 		if(paymentData[i].paid) continue;
@@ -196,18 +197,40 @@ function setCloverLastRead(date){
 		.then(() => true)
 		.catch( err => writeToErrorLog(err) );
 }
-
-//Retreiving all currently open takeout tickets
-function getOpenTakeoutTickets(){
-    return samba.getOpenTickets()
-		.then(tickets => {
-			return tickets.filter(ticket =>
-				ticket.type != 'Delivery Ticket');
-        })
-		.catch( err => {
-			writeToErrorLog(err);
-			return [];
+	
+//retreiving all currently open tickets that are not on hold (state is "Unpaid"), and are not delivery. sorted by pickup time.
+function getOpenTickets(){
+	return samba.gql(getOpenTicketsScript())
+		.then(tickets =>{
+			tickets = tickets.getTickets.filter(ticket =>
+				ticket.states.filter(state => state.state == "Unpaid").length != 0 && ticket.type != 'Delivery Ticket'
+			).map(ticket => {
+				ticket.states = ticket.states.filter(state => state.state == "Unpaid");
+				ticket.tags = ticket.tags.flatMap(tag => {
+					if (tag.tagName == "Pickup Time")
+						return [tag];
+					else
+						return [];
+					});
+				return ticket;
+				});
+			tickets.sort( (a,b) => {
+					let aTag = a.tags[0].tag;
+					let bTag = b.tags[0].tag;
+					if(aTag > bTag){
+						return 1;
+					}
+					else if(aTag < bTag){
+						return -1;
+					}
+					return 0;
+				});
+			writeToLog("Tickets: " + JSON.stringify(tickets, undefined, 2));
+			return tickets;
 		});
+}
+function getOpenTicketsScript(){
+	return `{getTickets(isClosed: false) {id, type, remainingAmount, states{state, stateName}, tags{tag, tagName}, entities{name}}}`;
 }
 
 
@@ -245,8 +268,12 @@ function getPaymentData(date){
 			return [];
 		});
 }
-
-
+async function loadPayments(){
+	let date = await getCloverLastRead(delay + (timeout / 60000));
+	paymentData = paymentData.concat(await Promise.all(processData(await getPaymentData(date))));
+	if(paymentData.length == 0)
+		writeToLog("Payments: " + JSON.stringify(paymentData, undefined, 2));
+}
 //Will process data received from Clover into an array of payment object(s).
 //Filter for result == "SUCCESS" as well as tickets were before the delay time.
 //read employee id from employee list

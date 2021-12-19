@@ -2,27 +2,21 @@
 
 
 
-module.exports = {isOpen, gql, updateGlobalSetting, getGlobalSetting, getOpenTickets, broadcast, openTerminal, closeTerminal, loadTicket, executeTicketAutomationCommand, payTicket, closeTicket, loadCustomer, loadItems, createTicket }; //Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket, getCheckHoldOrders};
+module.exports = {isOpen, gql, updateGlobalSetting, getGlobalSetting, broadcast, openTerminal, closeTerminal, loadTicket, executeTicketAutomationCommand, payTicket, closeTicket, loadCustomer, loadItems, createTicket }; //Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket, getCheckHoldOrders};
 
 const request = require('request');
 const querystring = require('querystring');
 const fs = require('fs');
-const dotenv = require('dotenv');
-dotenv.config();
+const config = require('./config/config').Samba;
 
 const log = require('./log');
-//const Server = require('./Server');
-//const Webhook = require('./Webhook');
-//const Clover = require('./Clover');
-//const Gloria = require('./Gloria');
-//const Deliverect = require('./Deliverect');
 
-const server = process.env.MESSAGE_SERVER;
-const messageServerPort = process.env.MESSAGE_SERVER_PORT;
-const serverKey = process.env.SERVER_KEY;
+const server = config.hostname;
+const messageServerPort = config.port;
+const serverKey = config.key;
 
-const userName = process.env.USERNAME;
-const password = process.env.PASSWORD;
+const userName = config.username;
+const password = config.password;
 const deliverectOrderTagName = process.env.DELIVERECT_ORDER_TAG_NAME;
 const terminalName = 'Server';
 const miscProductName = 'Misc';
@@ -168,73 +162,6 @@ async function updateGlobalSetting(settingName, value, updateType){
     });
 }
 
-
-
-
-//Retreiving value for when deliverect was last polled
-function getDeliverectLastRead(delay){
-    let qry = `{getGlobalSetting(name:"lastDeliverectCheck"){value}}`;
-    return gql(qry)
-        .then( resp =>{
-			let date = new Date(resp.getGlobalSetting.value);
-            if(delay)
-			    date.setMinutes(date.getMinutes() - delay);
-            return date;
-        })
-}
-
-//Setting value for when deliverect was last polled
-function setDeliverectLastRead(date){
-	if(!date)
-		date = new Date();
-    let qry = `mutation m{updateGlobalSetting(name:"lastDeliverectCheck", value:"${date.toJSON()}"){value}}`;
-    return gql(qry)
-        .then( () =>{
-            return true;
-        });
-}
-
-
-
-//Retreiving all currently open delivery tickets
-function getOpenDeliveryTickets(){
-    return getOpenTickets().then(tickets => {
-        return tickets.filter(ticket =>
-            ticket.type == 'Delivery Ticket');
-        });
-}
-
-//retreiving all currently open tickets that are not on hold (state is "Unpaid"). sorted by pickup time.
-function getOpenTickets(){
-	return gql(getOpenTicketsScript())
-		.then(tickets =>{
-			tickets = tickets.getTickets.filter(ticket =>
-				ticket.states.filter(state => state.state == "Unpaid").length != 0
-			).map(ticket => {
-				ticket.states = ticket.states.filter(state => state.state == "Unpaid");
-				ticket.tags = ticket.tags.flatMap(tag => {
-					if (tag.tagName == "Pickup Time")
-						return [tag];
-					else
-						return [];
-					});
-				return ticket;
-				});
-			tickets.sort( (a,b) => {
-					let aTag = a.tags[0].tag;
-					let bTag = b.tags[0].tag;
-					if(aTag > bTag){
-						return 1;
-					}
-					else if(aTag < bTag){
-						return -1;
-					}
-					return 0;
-				});
-			return tickets;
-		});
-}
-
 //register a GQL terminal
 function openTerminal(){
 	return gql(getOpenTerminalScript())
@@ -282,10 +209,6 @@ function broadcast(msg){
 function executeTicketAutomationCommand(terminalId, command, returnVal){
     return gql(getExecuteTicketAutomationCommandScript(terminalId, command, returnVal))
         .then(data => data.executeAutomationCommandForTerminalTicket[returnVal]);
-}
-
-function getOpenTicketsScript(){
-	return `{getTickets(isClosed: false) {id, type, remainingAmount, states{state, stateName}, tags{tag, tagName}, entities{name}}}`;
 }
 
 function getOpenTerminalScript(){
@@ -413,7 +336,7 @@ function getAddCustomerScript(customer) {
         {name}
     }`;
 }
-//Building GQL script to set new customer state to unconfrimed.
+//Building GQL script to set new customer state to unconfirmed.
 function getNewCustomerStateScript(customer) {
     return `mutation m{updateEntityState(entityTypeName:"${customer.type}",entityName:"${customer.name}",state:"Unconfirmed",stateName:"CStatus"){name}}`;
 }

@@ -8,11 +8,10 @@ const request = require('request');
 const querystring = require('querystring');
 const samba = require('./Samba');
 const log = require('./log');
-const dotenv = require('dotenv');
-dotenv.config();
+const config = require('./config/config');
 
-const gloriaFoodKey = process.env.GLORIAFOOD_KEY;
-const ticketType =  process.env.GLORIAFOOD_TICKET_TYPE;
+const gloriaFoodKey = config.Gloria.key;
+const ticketType =  config.Gloria.ticketType;
 const customerEntityType = 'Customers';
 const departmentName = 'Takeout';
 const deliveryFeeCalculation = 'Delivery Service';
@@ -42,10 +41,8 @@ function writeToErrorLog(content){
 start();
 
 //starting GloriaFood integration app. will run an infinite loop, running the "loopGloria" function
-async function start(testing){
-    if(testing)
-        isTest = true;
-	writeToLog("Gloria Started.\r\n\r\n\r\n");
+async function start(){
+    writeToLog("Gloria Started.\r\n\r\n\r\n");
     while(true){
         if(samba.isOpen()){
             try{await loopGloria();}

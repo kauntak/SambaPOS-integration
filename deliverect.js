@@ -6,13 +6,13 @@ const http = require('http');
 const samba = require('./Samba');
 const sql = require('./sql');
 const log = require('./log');
-const dotenv = require('dotenv');
-dotenv.config();
+const config = require('./config/config');
 
-const paymentType = process.env.DELIVERECT_PAYMENT_TYPE;
-const ticketType = process.env.DELIVERECT_TICKET_TYPE;
-const deliverectOrderTagName = process.env.DELIVERECT_ORDER_TAG_NAME;
-const departmentName = process.env.DELIVERECT_DEPARTMENT_NAME
+const paymentType = config.Deliverect.paymentType;
+const ticketType = config.Deliverect.ticketType;
+const deliverectOrderTagName = config.Deliverect.orderTagName;
+const departmentName = config.Deliverect.departmentName;
+const whiteList = config.Deliverect.whiteList;
 const tipCalculation = 'Tip';
 const miscProductName = 'Misc';
 
@@ -74,10 +74,21 @@ async function start(testing){
 	return;
 }
 
+
+function processDeliverect(req){
+	if(whiteList.includes(req.headers['x-forwarded-for'])){
+		let orderId = randomUUID();
+		processDeliverect(req.body, orderUId);
+		return `{"posOrderId": "${orderUId}"}`;
+	} else
+		return 401;
+}
+
+
 //will check total orders, if 0 return
 //for each order that is received it will check the order status and call the required function.
 //after orders have been processed, the orders will be inserted into DeliverectOrders database
-async function processDeliverect(order, orderUID) {
+async function processOrder(order, orderUID) {
 	writeToLog(JSON.stringify(order, undefined, 2));
 	if(order.status == 20 || order.status == 120){
 		if(idList.find(id => id == order["_id"])) 
@@ -136,7 +147,7 @@ async function finalizeOrder(order){
 //will return an object with
 //order id,		customer name,		customer phone,
 //origin order company(Skip/Doordash), origin Company order id,
-//origin company display id,  fulfillment time, total amount paid,
+//origin company display id,  fulfillment time, total amount paid, if order is a pickup
 //order note, and the decimal digits to offset for the order price(eg digits:2, price:1234, actual dollar amount is $12.34)
 function createTicketData(order){
 	/**
@@ -191,7 +202,7 @@ function processItem(item, digits) {
 	else
 		item.remark = processComment(item.remark);
     return {
-        id: item.plu.replace(/[^A-Za-z0-9]/g, ""),
+        id: item.plu.replace(/[^A-Za-z0-9]/g, randomString(2)),
         name: item.name,
         price: item.price / Math.pow(10, digits),
         quantity: item.quantity,
@@ -202,6 +213,31 @@ function processItem(item, digits) {
 		groupCode: ""
     };
 }
+
+function randomString(length) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() *  charactersLength));
+   }
+   return result;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function insertIntoDeliverectDB(data){
 	let qry = `

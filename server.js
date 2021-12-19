@@ -7,7 +7,6 @@ const deliverect = require('./Deliverect');
 const log = require('./log');
 const report = require('./report');
 
-const dotenv = require('dotenv');
 const { randomUUID } = require('crypto');
 const { response } = require('express');
 const session = require('express-session');
@@ -19,11 +18,13 @@ const { request } = require('http');
 const users = require('./Users');
 
 const app = express();
-dotenv.config();
-const listenPort = process.env.LISTEN_PORT;
-const hostname = 'localhost';
 
-const whiteList = ["35.241.160.154", "35.241.180.107", "104.199.82.58", "34.79.19.218"];
+
+const config = require('./config/config');
+const listenPort = config.Server.port;
+const hostname = config.Server.hostname;
+
+
 
 //writing to log for the server.
 function writeToLog(content){
@@ -91,11 +92,11 @@ function start(){
 
     app.post("/deliverect", (req, res)=>{
         writeToLog(req.headers);
-        if(whiteList.includes(req.headers['x-forwarded-for'])){
-            let orderId = randomUUID();
-            deliverect.processDeliverect(req.body, orderId);
-            res.send(`{"posOrderId": "${orderId}"}`);
-        } else res.status(401).end("Unauthorized");
+        let posRes = deliverect.processDeliverect(req);
+        if(posRes === 401){
+            res.status(401).end("Unauthorized");
+        } else
+            res.send(posRes);
     });
 
     
