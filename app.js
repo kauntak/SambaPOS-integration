@@ -5,9 +5,61 @@ const log = require('./log');
 //const Gloria = require('./Gloria');
 const {performance} = require('perf_hooks');
 const fork = require('child_process').fork;
-const isTest = false;
+const { app, BrowserWindow } = require('electron');
+const path = require('path');
+const fs = require('fs');
 
-start();
+const isTest = false;
+//start()
+
+
+
+return;
+
+function createWindow(){
+    const window = new BrowserWindow({
+        width:800,
+        height: 600,
+        webPreferences: {
+            preload:path.join(__dirname, 'app/preload.js')
+        }
+    });
+
+    window.loadFile('App/index.html');
+}
+
+
+app.whenReady().then(() => {
+    createWindow();
+
+    app.on('activate', () =>{
+        if(BrowserWindow.getAllWindows().length === 0) 
+            createWindow();
+    });
+});
+
+app.on('window-all-closed', () => {
+    if(process.platform !== 'darwin')
+        app.quit();
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//start();
 //function for writing log for the main app.
 function writeToLog(content){
     log.write("App",content);
@@ -31,8 +83,8 @@ async function start(){
     //Gloria.start(isTest);
     //Clover.start(isTest);
     const Server = fork('./Server');
-    const Webhook = fork('./Webhook');
-    const Clover = fork('./Clover');
-    const Gloria = fork('./Gloria');
+    // const Webhook = fork('./Webhook');
+    // const Clover = fork('./Clover');
+    // const Gloria = fork('./Gloria');
     //const Hold = fork('./HoldOrders');
 }
