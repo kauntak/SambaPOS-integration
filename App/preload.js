@@ -1,10 +1,30 @@
-window.addEventListener('DOMContentLoaded', () => {
-    const replaceText = (selector, text) => {
-        const element = document.getElementById(selector)
-        if(element) element.innerText = text;
-    }
+var {ipcRenderer, contextBridge} = require('electron');
 
-    for(const dependency of ['chrome', 'node', 'electron']){
-        replaceText(`${dependency}-version`, process.versions[dependency]);
+
+contextBridge.exposeInMainWorld(
+    "api", {
+        send: (channel, data) => {
+            let validChannels = ["toMain", "startApp", "stopApp"];
+            if(validChannels.includes(channel)){
+                ipcRenderer.send(channel, data);
+            }
+        },
+        receive: (channel, func) => {
+            let validChannels = ["fromMain", "writeToLog"];
+            if(validChannels.includes(channel)){
+                ipcRenderer.on(channel, (event, data) => func(data));
+            }
+        }
     }
-});
+)
+
+
+
+// ipc.addListener('log', (event, data)=>{
+//     const logElement = document.getElementById("log");
+// 	logElement.innerHTML += `<div><pre>${date}: ${content}</pre></div><br/>`;
+// 	if(logElement.childNodes.length > 50){
+// 		logElement.removeChild(logElement.firstChild);
+// 	}
+// });
+

@@ -1,16 +1,16 @@
 //Will Poll Clover for new payments, and settle appropriate tickets in SambaPOS
 
-module.exports = {start};
+module.exports = {start, stop};
 
 const request = require('request');
 const samba = require('./samba');
 const sql = require('./sql');
-const log = require('./log');
-const config = require('./config/config');
+const log = require('./app');
+const config = require('./config/config').clover;
 
-const cloverMID = config.Clover.merchantId;
-const cloverKey = config.Clover.key;
-const paymentType = config.Clover.paymentType;
+const cloverMID = config.merchantId;
+const cloverKey = config.key;
+const paymentType = config.paymentType;
 //how long to pause between loop iteration
 //minutes x 60000 milliseconds(1minute)
 const timeout = 6 * 60000;
@@ -67,19 +67,20 @@ function writeToErrorLog(content){
 	log.write("Clover_Error", content);
 }
 
-start();
-
+//start();
+var isStopped = false;
 //main function to run the Clover integration.
 //If store is open will run an infinite loop, running the function loopClover(), and will pause for "timeout" milliseconds
 //Otherwise will wait pause for "timeout" milliseconds * 5 to check if store is open again.
 async function start(testing){
+	isStopped = false;
     if(testing){
         isTest = true;
 		paymentData = testData;
 	}
-	writeToLog("Clover Started.\r\n\r\n\r\n");
+	writeToLog("Clover Started.");
     await loadEmployees();
-    while(true){
+    while(!isStopped){
 		if(samba.isOpen() || isTest){
 			try{await loopClover();}
 			catch(err){if(err) writeToErrorLog(err)}
@@ -88,9 +89,12 @@ async function start(testing){
 		else
 			await new  Promise(r => setTimeout(r, closedTimeout));
     }
-
+	writeToLog("Clover Stopped.");
 }
 
+function stop(){
+	isStopped = true;
+}
 //the main function to be looped.
 //Will read a date/time in the database for the last poll time and poll Clover for new payments after that date/time.
 //Will get open tickets from SambaPOS.

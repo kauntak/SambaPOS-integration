@@ -5,14 +5,14 @@ module.exports = {processDeliverect, start};
 const http = require('http');
 const samba = require('./Samba');
 const sql = require('./sql');
-const log = require('./log');
-const config = require('./config/config');
+const log = require('./app');
+const config = require('./config/config').deliverect;
 
-const paymentType = config.Deliverect.paymentType;
-const ticketType = config.Deliverect.ticketType;
-const deliverectOrderTagName = config.Deliverect.orderTagName;
-const departmentName = config.Deliverect.departmentName;
-const whiteList = config.Deliverect.whiteList;
+const paymentType = config.paymentType;
+const ticketType = config.ticketType;
+const deliverectOrderTagName = config.orderTagName;
+const departmentName = config.departmentName;
+const whiteList = config.whiteList;
 const tipCalculation = 'Tip';
 const miscProductName = 'Misc';
 
@@ -177,7 +177,7 @@ function createTicketData(order){
 		id:	order["_id"],
         name: order.customer.name,
 		channelDisplayId: order.channelOrderDisplayId,
-		time: new Date(order.pickupTime),
+		time: processTime(order.pickupTime),
 		note: order.note,
 		amount: order.payment.amount/(Math.pow(10, order.decimalDigits)),
 		decimalDigits: order.decimalDigits,
@@ -187,6 +187,12 @@ function createTicketData(order){
 	return data;
 }
 
+//rounds time to closest 5 minutes
+function processTime(time){
+	time = new Date(time);
+	var coeff = 1000 * 60 * 5;//5minutes in milliseconds
+	return new Date(Math.round(time.getTime() / coeff) * coeff);
+}
 
 //removed unwanted user input
 function processComment(comment, name){
@@ -279,13 +285,15 @@ async function updateDisplaysAsCancelled(data){
 		UPDATE Tasks
 		SET [Content] = CONCAT([CONTENT], CHAR(10), '<color red><bold><size 22>CANCELLED</size></bold></color>')`
 	//qry += `WHERE Identifier = '${data.ticketNumber}'`;
-	qry += `WHERE Name = '${data.ticketNumber}'`;
+	qry += `WHERE Name = '${data.ticketNumber}'
+			OR Identifier = '${data.ticketNumber}'`;
 	await sql.exec(qry);
 	qry = `
 		SELECT TaskTypes.Name as Name
 		FROM [SambaPOS5].[dbo].[Tasks]
 		JOIN TaskTypes on TaskTypeId = TaskTypes.Id
 		WHERE Tasks.Name = '${data.ticketNumber}'
+		OR Identifier = '${data.ticketNumber}'
 		AND SubOf IS NULL
 		`;
 	let displays = await sql.query(qry);
@@ -323,7 +331,7 @@ function voidTicket(data){
 		RemainingAmount = 0,
 		TotalAmount = 0,
 		TotalAmountPreTax = 0,
-		TicketStates = REPLACE(TicketStates, value, REPLACE(value, '"S":'+S+'",', '"S":"Paid",')),
+		TicketStates = REPLACE(TicketStates, value, REPLACE(value, '"S":"'+S+'",', '"S":"Paid",')),
 		IsCompleted = 1
 	FROM Tickets
 	CROSS APPLY OPENJSON(TicketStates, '$') states

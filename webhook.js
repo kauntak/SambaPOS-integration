@@ -1,10 +1,10 @@
 //Start ngrok webserver, and create a tunnel to connect local server to it.
 
-module.exports = {start};
+module.exports = {start, stop};
 
 const ngrok = require('ngrok');
 const dotenv = require('dotenv');
-const log = require('./log');
+const log = require('./app');
 dotenv.config();
 
 const ngrok_options = {
@@ -13,19 +13,25 @@ const ngrok_options = {
 	subdomain: process.env.NGROK_SUBDOMAIN,
 	authtoken: process.env.AUTH_TOKEN
 };
-start();
+//start();
 
 //writing to log for ngrok web server
 function writeToLog(content){
     log.write("Webhook", content);
 }
-
+let url;
+let api;
+let hookrequests;
 //starting ngrok server.
 //will create a tunnel to local Server.
 async function start(){
-    const url = await ngrok.connect(ngrok_options);
-	const api = ngrok.getApi();
-	const hookrequests = api.listRequests();
-	writeToLog("Webhook Server Started.\r\n\r\n\r\n");
-	return;
+    url = await ngrok.connect(ngrok_options);
+	api = ngrok.getApi();
+	hookrequests = api.listRequests();
+	writeToLog("Webhook Server Started.");
+}
+
+async function stop(){
+	await ngrok.disconnect();
+	writeToLog("Webhook disconnected.");
 }

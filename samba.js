@@ -7,9 +7,9 @@ module.exports = {isOpen, gql, updateGlobalSetting, getGlobalSetting, broadcast,
 const request = require('request');
 const querystring = require('querystring');
 const fs = require('fs');
-const config = require('./config/config').Samba;
+const config = require('./config/config').samba;
 
-const log = require('./log');
+const log = require('./app');
 
 const server = config.hostname;
 const messageServerPort = config.port;

@@ -1,5 +1,5 @@
 const samba = require('./Samba');
-const log = require('./log');
+const log = require('./app');
 
 //minutes x 60000 milliseconds(1minute)
 const timeout =  5 * 60000;

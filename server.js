@@ -1,10 +1,10 @@
 //Local server.
 
-module.exports = {start};
+module.exports = {start, stop};
 
 const deliverect = require('./Deliverect');
 //const samba = require('./Samba');
-const log = require('./log');
+const log = require('./app');
 const report = require('./report');
 
 const { randomUUID } = require('crypto');
@@ -20,9 +20,9 @@ const users = require('./Users');
 const app = express();
 
 
-const config = require('./config/config');
-const listenPort = config.Server.port;
-const hostname = config.Server.hostname;
+const config = require('./config/config').server;
+const listenPort = config.port;
+const hostname = config.hostname;
 
 
 
@@ -34,8 +34,9 @@ function writeToLog(content){
 function writeToErrorLog(content){
 	log.write("Server_Error", content);
 }
-
-start();
+let server;
+let isStopped = false;
+//start();
 //main function to start server.
 //paired with ngrok webhook server.
 //if url is /deliverect and method is post will call the deliverect process function
@@ -47,7 +48,7 @@ start();
 //      -Managers can add/remove staff
 //TODO: receive push requests from GloriaFood
 function start(){
-    writeToLog("Server Starting.\r\n\r\n\r\n");
+    writeToLog("Server Starting.");
     app.use(express.json());
     app.use(bodyParser.urlencoded({extended: true}));
     //app.use(cookieParser());
@@ -104,12 +105,14 @@ function start(){
         res.status(404).end("404 Page Not Found. You found a non-page!");
     });
     
-    app.listen(listenPort,()=>{
+    server = app.listen(listenPort,()=>{
         writeToLog("Server started on port: " + listenPort);
     });
 
 }
-
+function stop(){
+	server.close();
+}
 
 /* depreciated code using http
 const http = require('http');

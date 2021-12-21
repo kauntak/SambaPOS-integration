@@ -1,6 +1,7 @@
 module.exports = {write}
 
 const fs = require('fs');
+const ipc = require('electron').ipcRenderer;
 
 //will log for entire app, but will separate files depending on which module has called it.
 function write(source, content){
@@ -9,6 +10,8 @@ function write(source, content){
 	if(typeof content == "Object")
 	 	content = JSON.stringify(content);
     console.log(content);
+	console.log(ipc);
+	ipc.send("writeToLog", `${date}: ${content}`);
     if(!fs.existsSync('./log'))
 		fs.mkdir('./log', err=> {if(err) console.log(err)});
 	fs.appendFile(`log/log_${source}.txt`, `${date}: ${content}\r\n`,(err) => {
@@ -16,3 +19,4 @@ function write(source, content){
         }
     );
 }
+

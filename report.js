@@ -4,7 +4,7 @@
 module.exports = {generateReport, processHoldOrderData, changeTaskToHTML};
 const sql = require('./sql');
 const samba = require('./Samba');
-const log = require('./log');
+const log = require('./app');
 
 const font = 'font-family: Arial, Helvetica, sans-serif;';
 

@@ -6,12 +6,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Samba Integration</title>
     <link rel="stylesheet" href="style.css">
+    <script src="./index.js"></script>
+    <script>
+        window.api.receive("fromMain", (data) => {
+            alert(data);
+        });
+        window.api.send("toMain", "test");
+        window.api.receive("writeToLog", data => {
+            const logElement = document.getElementById("log");
+            logElement.innerHTML += `
+                <div>
+                    <table>
+                        <tr>
+                            <td>${data.date}<br/>${data.source}</td>
+                            <td><pre>${data.content}</pre></td>
+                        </tr>
+                    </table>
+                </div><br/>`;
+            console.log(logElement.childNodes);
+            while(logElement.childNodes.length > 5){
+                logElement.removeChild(logElement.firstChild);
+            }
+        });
+    </script>
 </head>
-<body>
-    <h1>Start</h1>
-    We are using Node.js <span id="node-version"></span>,
-    Chromium <span id="chrome-version">,
-    and Electron <span id="electron-version"></span>
-    </span>
+<body onload="load()">
+    <div id="main">
+<!-- 
+        <table>
+            <tr>
+                <td><label for="openTime-0-isOpen">Is Open?</label><input type="checkbox" name="openTime-0-isOpen" id="openTime-0-isOpen" checked></td>
+            </tr>
+            <tr>
+                <td><label for="openTime-0-from">From: </label><input type="time" name="openTime-0-from" id="openTime-0-from" step="300" readonly></td>
+            </tr>
+            <tr>
+                <td><label for="openTime-0-to">To:</label><input type="time" name="1" id="2" checked></td>
+            </tr>
+        </table> -->
+    </div>
+    
 </body>
 </html>

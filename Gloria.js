@@ -1,17 +1,17 @@
 //Integration for Gloria Foods. Will create ticket in SambaPOS for Orders placed on Gloria Foods.
 //TODO: Currently Polling, will change to Push
 
-module.exports = {start};
+module.exports = {start, stop};
 
 const express = require('express');
 const request = require('request');
 const querystring = require('querystring');
 const samba = require('./Samba');
-const log = require('./log');
-const config = require('./config/config');
+const log = require('./app');
+const config = require('./config/config').gloria;
 
-const gloriaFoodKey = config.Gloria.key;
-const ticketType =  config.Gloria.ticketType;
+const gloriaFoodKey = config.key;
+const ticketType =  config.ticketType;
 const customerEntityType = 'Customers';
 const departmentName = 'Takeout';
 const deliveryFeeCalculation = 'Delivery Service';
@@ -38,12 +38,13 @@ function writeToErrorLog(content){
 	log.write("Gloria_Error", content);
 }
 
-start();
-
+//start();
+let isStopped = false;
 //starting GloriaFood integration app. will run an infinite loop, running the "loopGloria" function
 async function start(){
-    writeToLog("Gloria Started.\r\n\r\n\r\n");
-    while(true){
+    isStopped = false;
+    writeToLog("Gloria Started.");
+    while(isStopped){
         if(samba.isOpen()){
             try{await loopGloria();}
             catch(err){if(err) writeToErrorLog(err)}
@@ -54,6 +55,10 @@ async function start(){
             await new Promise(r => setTimeout(r, closedTimeout));
     }
 }
+function stop(){
+	isStopped = true;
+}
+
 var count = 30;
 //the function to be looped.
 //Polls tickets from GloriaFoods and if there are tickets will process them.

@@ -7,19 +7,18 @@ module.exports = {connect, exec, query, insert, insertIntoPaymentsDB, insertInto
 const Connection = require('tedious').Connection;
 const Request = require('tedious').Request;
 const TYPES = require('tedious').TYPES;
-const log = require('./log');
+const log = require('./app');
 const report = require('./report');
-const dotenv = require('dotenv');
-dotenv.config();
+const config = require('./config/config').sql;
 
-const server = process.env.SQL_SERVER;
-const user = process.env.USER;
-const pwd = process.env.PWD;
-const dbase = process.env.DATABASE;
-const Dport = process.env.DATABASE_PORT;
+const server = config.hostname;
+const user = config.user;
+const pwd = config.password;
+const dbase = config.databaseName;
+const Dport = config.port;
 
 
-const config = {
+const dbConfig = {
     server: server,
     authentication: {
         type: 'default',
@@ -48,7 +47,7 @@ function writeToErrorLog(content){
 
 function query(qry){
 	return new Promise((resolve, reject) => {
-		let connection = new Connection(config);
+		let connection = new Connection(dbConfig);
 		connection.on('connect', err => {
 			if(err)	reject(err);
 			else{
@@ -80,7 +79,7 @@ function query(qry){
 function exec(qry){
 	console.log(qry);
 	return new Promise((resolve, reject) => {
-		let connection = new Connection(config);
+		let connection = new Connection(dbConfig);
 		connection.on('connect', err => {
 			if(err)	{console.log(err); reject(err);}
 			else{
@@ -111,7 +110,7 @@ function insert(qry){
 //connecting to database.
 function connect(type, data){
 	return new Promise((resolve, reject)=>{
-		connection = new Connection(config);
+		connection = new Connection(dbConfig);
 		connection.on('connect', err => {
 			writeToLog("Start connection.");
 			if (err) {
