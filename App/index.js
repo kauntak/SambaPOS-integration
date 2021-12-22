@@ -53,14 +53,15 @@ function load(){
             buttons += `<button class="tablinks" onclick="openSetting(event, '${i}')">${changeCamelCaseToSentence(i)}</button>`;
         }
         buttons += `</div>`;
-        document.getElementById("main").innerHTML = buttons;
+        return buttons;
     };
     const createDiv = (config) => {
         let html = `
             <div class="tabcontent" id="home" stlye="display:block">
-                <button type="button" id="startButton" onclick="toggleStart()">Start</button>
+                <button type="button" id="startButton" onclick="toggleStart()" class="startButton">Start</button>
                 <div class="logcontainer">
-                    <div id="log"></div>
+                    <div id="log"></div><br/>
+                    <div id="errorlog"></div>
                 </div>
             </div>`;
         for(let i in config){
@@ -106,7 +107,7 @@ function load(){
                         html += `
                                 <tr>
                                     <td><label for="${i}-${j}-${k}">${changeCamelCaseToSentence(k)}:</label></td>
-                                    <td><input name="${i}-${j}-${k}" id="${i}-${j}-${k}" ${k == 'isOpen' ? 'type="checkbox" class="openCheckBox dataToSave" onchange="toggleCheckBox(event)" ' + checkOption : 'type="time" class="timeInput dataToSave" step="300" ' + timeOption}></td>
+                                    <td${k=='isOpen'? ` style="position: relative; display: inline-block;"` :''}><input name="${i}-${j}-${k}" id="${i}-${j}-${k}" ${k == 'isOpen' ? 'type="checkbox" class="openCheckBox dataToSave" onchange="toggleCheckBox(event)" ' + checkOption : 'type="time" class="timeInput dataToSave" step="300" ' + timeOption}>${k == 'isOpen' ? `<label for="${i}-${j}-${k}" class="openCheckBox-label">Switch</label>`:''}</td>
                                     
                                 </tr>`;
                     }
@@ -115,7 +116,7 @@ function load(){
             }
             html += `</table><button type="button" class="saveButton" onclick="saveData()">Save</button></form></div>`;
         }
-        document.getElementById("main").innerHTML += html;
+        return html;
     };
     fetch('../config/config.json')
     .then(res => {
@@ -125,8 +126,10 @@ function load(){
         return res.json();
     })
     .then(config => {
-        createDivButtons(config);
-        createDiv(config);
+        document.getElementById("main").innerHTML += `
+            ${createDivButtons(config)}
+            ${createDiv(config)}`;
+        
         return;
     })
     .catch(err => alert(err));
@@ -194,9 +197,13 @@ function toggleStart(){
     if(startButton.innerHTML == "Start"){
         window.api.send("startApp");
         startButton.innerHTML = "Stop";
+        startButton.style["background-image"] = "linear-gradient(#884949, #371d1d)";
+        startButton.style.color="#cbb1a4";
     } else{
         window.api.send("stopApp");
         startButton.innerHTML = "Start";
+        startButton.style["background-image"] = "linear-gradient(#3b6738, #1d3528)";
+        startButton.style.color = "#a4cba8";
     }
     
 }

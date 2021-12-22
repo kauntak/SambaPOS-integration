@@ -72,18 +72,23 @@ ipcMain.on('saveConfig', (event,data) => {
 function write(source, content){
 	var date = new Date();
 	date = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 19).replace('T', ', ') + ":" + date.getMilliseconds();
-	if(typeof content == "Object")
+	if(typeof content == "Object"){
 	 	content = JSON.stringify(content);
-    if(source.search("Error") != -1)
-        content = `<div style="color:red;">${content}</div>`
-    console.log(content);
-	window.webContents.send("writeToLog", {source:source, content:content, date:date});
+    }
+    
     if(!fs.existsSync('./log'))
-		fs.mkdir('./log', err=> {if(err) console.log(err)});
-	fs.appendFile(`log/log_${source}.txt`, `${date}: ${content}\r\n`,(err) => {
-        if(err) console.log(err);
-        }
-    );
+         fs.mkdir('./log', err=> {if(err) console.log(err)});
+     fs.appendFile(`log/log_${source}.txt`, `${date}: ${content}\r\n`,(err) => {
+         if(err) console.log(err);
+         }
+     );
+        
+    var sendTo = "writeTo";
+    if(source.search("Error") != -1){
+        sendTo += "Error";
+    }        
+    sendTo += "Log";
+	window.webContents.send(sendTo, {source:source, content:content, date:date});
 }
 
 

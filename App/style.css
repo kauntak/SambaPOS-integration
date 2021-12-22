@@ -1,11 +1,22 @@
- /* Style the tab */
+ #main{
+    background-color:rgb(85,85,85);
+    color:#f3ffe9;
+    margin: 5px, 5px;
+    padding: 5px;
+    width: auto;
+    height: auto;
+    font-family: Arial, Helvetica, sans-serif;
+ }
+ input.dataToSave{
+  background-color:#395849b3;
+  color:#c6dab6
+}
  .tab {
     overflow: hidden;
     border: 1px solid #ccc;
     background-color: #f1f1f1;
   }
   
-  /* Style the buttons that are used to open the tab content */
   .tab button {
     background-color: inherit;
     float: left;
@@ -16,26 +27,249 @@
     transition: 0.3s;
   }
   
-  /* Change background color of buttons on hover */
   .tab button:hover {
     background-color: #ddd;
   }
   
-  /* Create an active/current tablink class */
   .tab button.active {
     background-color: #ccc;
   }
   
-  /* Style the tab content */
   .tabcontent {
     display: none;
     padding: 6px 12px;
     border: 1px solid #ccc;
     border-top: none;
+    vertical-align: top;
   } 
-
+  #deliverect-whiteListArrayTable{
+    position:relative;
+    left:-5px;
+  }
   #log{
     overflow-y: auto;
-    min-height: 80vh;
-    max-height: 80vh;
+    overflow-x:auto;
+    min-height: 50vh;
+    max-height: 50vh;
+    background: #424a44;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);;
+    margin-top: 15px;
   }
+  .logheader{
+    font-family:arial;
+    font-size:15px;
+    vertical-align:top;
+  }
+  .logcontent{
+    vertical-align:top;
+    position:relative;
+    top:-6px;
+  }
+  .errorlogcontent{
+    vertical-align:top;
+    position:relative;
+    top:-6px;
+  }
+  #errorlog{
+    overflow-y: auto;
+    overflow-x:auto;
+    min-height: 40vh;
+    max-height: 40vh;
+    color:#bc3939;
+    background: #322928;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);;
+    margin-top: 5px;
+  }
+
+  .formTable{
+    padding:10px;
+  }
+
+  td{
+    padding:5px;
+    vertical-align: top;
+  }
+
+  .openCheckBox {
+    display: none;
+  }
+  .openCheckBox-label {
+    display: block;
+    width: 48px;
+    height: 24px;
+    text-indent: -150%;
+    clip: rect(0 0 0 0);
+    color: transparent;
+    user-select: none;
+    position: relative;
+  }
+  .openCheckBox-label::before,
+  .openCheckBox-label::after {
+    content: "";
+    display: block;
+    position: absolute;
+    cursor: pointer;
+  }
+  .openCheckBox-label::before {
+    width: 100%;
+    height: 100%;
+    background-color: #dedede;
+    border-radius: 9999em;
+    -webkit-transition: background-color 0.25s ease;
+    transition: background-color 0.25s ease;
+  }
+  .openCheckBox-label::after {
+    top: 0;
+    left: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #fff;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.45);
+    -webkit-transition: left 0.25s ease;
+    transition: left 0.25s ease;
+  }
+  .openCheckBox:checked + .openCheckBox-label::before {
+    background-color: #89c12d;
+  }
+  .openCheckBox:checked + .openCheckBox-label::after {
+    left: 24px;
+  }
+
+
+.saveButton {
+  align-items: center;
+  background-color: initial;
+  background-image: linear-gradient(#475546, #607469);
+  border-radius: 8px;
+  border-width: 0;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, .1),0 3px 6px rgba(0, 0, 0, .05);
+  box-sizing: border-box;
+  color: #a4cba8;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  font-family: expo-brand-demi,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+  font-size: 18px;
+  font-weight: 480;
+  height: 3.5vh;
+  justify-content: center;
+  line-height: 1;
+  margin: 0;
+  outline: none;
+  overflow: hidden;
+  padding: 0 32px;
+  text-align: center;
+  text-decoration: none;
+  transform: translate3d(0, 0, 0);
+  transition: all 150ms;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.saveButton:hover {
+  box-shadow: rgba(0, 1, 0, .2) 0 2px 8px;
+  opacity: .85;
+}
+
+.saveButton:active {
+  outline: 0;
+}
+
+.saveButton:focus {
+  box-shadow: rgba(0, 0, 0, .5) 0 0 0 3px;
+}
+
+@media (max-width: 420px) {
+  .saveButton {
+    height: 48px;
+  }
+}
+
+#addRowButton {
+  align-items: center;
+  background-color: initial;
+  background-image: linear-gradient(#475546, #607469);
+  border-radius: 8px;
+  border-width: 0;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, .1),0 3px 6px rgba(0, 0, 0, .05);
+  box-sizing: border-box;
+  color: #a4cba8;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  font-family: expo-brand-demi,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+  font-size: 14px;
+  font-weight: 380;
+  height: 2vh;
+  width: 25px;
+  justify-content: center;
+  line-height: 1;
+  margin: 0;
+  outline: none;
+  overflow: hidden;
+  padding: 0 32px;
+  text-align: center;
+  text-decoration: none;
+  transform: translate3d(0, 0, 0);
+  transition: all 150ms;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+#addRowButton:hover {
+  box-shadow: rgba(0, 1, 0, .2) 0 2px 8px;
+  opacity: .85;
+}
+
+#addRowButton:active {
+  outline: 0;
+}
+
+#addRowButton:focus {
+  box-shadow: rgba(0, 0, 0, .5) 0 0 0 3px;
+}
+
+#startButton {
+  align-items: center;
+  background-color: initial;
+  background-image: linear-gradient(#3b6738, #1d3528);
+  border-radius: 8px;
+  border-width: 0;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, .1),0 3px 6px rgba(0, 0, 0, .05);
+  box-sizing: border-box;
+  color: #a4cba8;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  font-family: expo-brand-demi,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+  font-size: 20px;
+  font-weight: 560;
+  height: 4vh;
+  width: 180px;
+  justify-content: center;
+  line-height: 1;
+  margin: 0;
+  outline: none;
+  overflow: hidden;
+  padding: 0 32px;
+  text-align: center;
+  text-decoration: none;
+  transform: translate3d(0, 0, 0);
+  transition: all 150ms;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+#startButton:hover {
+  box-shadow: rgba(0, 1, 0, .2) 0 2px 8px;
+  opacity: .85;
+}
+
+#startButton:active {
+  outline: 0;
+}
+
+#startButton:focus {
+  box-shadow: rgba(0, 0, 0, .5) 0 0 0 3px;
+}

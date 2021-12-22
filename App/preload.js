@@ -10,7 +10,7 @@ contextBridge.exposeInMainWorld(
             }
         },
         receive: (channel, func) => {
-            let validChannels = ["fromMain", "writeToLog"];
+            let validChannels = ["fromMain", "writeToLog", "writeToErrorLog"];
             if(validChannels.includes(channel)){
                 ipcRenderer.on(channel, (event, data) => func(data));
             }
