@@ -11,5 +11,5 @@ function load(){
 }
 
 function write(newConfigJSON){
-    fs.writeFileSync('./config.json', JSON.stringify(newConfigJSON, undefined, 2));
+    fs.writeFileSync('./config/config.json', JSON.stringify(newConfigJSON, undefined, 2));
 }
