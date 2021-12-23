@@ -20,7 +20,7 @@ var window;
 function createWindow(){
     window = new BrowserWindow({
         width:800,
-        height: 600,
+        height: 1000,
         webPreferences: {
             preload:path.join(__dirname, 'app/preload.js'),
             nodeIntegration:false,

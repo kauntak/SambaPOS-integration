@@ -130,7 +130,7 @@
     transition: left 0.25s ease;
   }
   .openCheckBox:checked + .openCheckBox-label::before {
-    background-color: #89c12d;
+    background-color: #3b6738;
   }
   .openCheckBox:checked + .openCheckBox-label::after {
     left: 24px;

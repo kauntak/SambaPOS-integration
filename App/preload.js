@@ -4,7 +4,7 @@ var {ipcRenderer, contextBridge} = require('electron');
 contextBridge.exposeInMainWorld(
     "api", {
         send: (channel, data) => {
-            let validChannels = ["toMain", "startApp", "stopApp"];
+            let validChannels = ["toMain", "startApp", "stopApp", "saveConfig"];
             if(validChannels.includes(channel)){
                 ipcRenderer.send(channel, data);
             }

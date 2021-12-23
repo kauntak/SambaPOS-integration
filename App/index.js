@@ -218,19 +218,24 @@ function saveData(){
         let [i,j,k] = elements[index].id.split("-");
         if(!config[i]) 
             config[i] = {};
-        if(!k){
+        if(k == undefined){
             config[i][j] = elements[index].value || "";
         } else {
             if(!config[i][j])
             config[i][j] = {};
-            if(i == "openTime"){
-                config[i][j][k] = elements[index].value;
+            if(i != "openTime"){
+                if(elements[index].value != '')
+                    config[i][j][k] = elements[index].value;
             } else{
-                if(elements[index].value)
+                
+                if(k=="isOpen"){
+                    config[i][j][k] = elements[index].checked;
+                }
+                else
                     config[i][j][k] = elements[index].value;
             }
         }
         
     }
-    console.log(config);
+    window.api.send("saveConfig", config);
 }

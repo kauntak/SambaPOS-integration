@@ -12,11 +12,11 @@ const config = require('./config/config').gloria;
 
 const gloriaFoodKey = config.key;
 const ticketType =  config.ticketType;
-const customerEntityType = 'Customers';
-const departmentName = 'Takeout';
-const deliveryFeeCalculation = 'Delivery Service';
-const promotionDiscount = 'Discount';
-const tipCalculation = 'Tip';
+const customerEntityType = config.customerEntityType;
+const departmentName = config.departmentName;
+const deliveryFeeCalculation = config.deliveryFeeCalculation;
+const promotionDiscount = config.promotionDiscount;
+const tipCalculation = config.tipCalculation;
 const timeout = 2000;
 //minutes x 60000 milliseconds(1minute)
 const closedTimeout =  30 * 60000;
