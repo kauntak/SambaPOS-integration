@@ -1,0 +1,91 @@
+{
+  "samba": {
+    "hostname": "",
+    "port": "",
+    "key": "",
+    "terminalName": "",
+    "username": "",
+    "password": "",
+    "miscProductName": ""
+  },
+  "gloria": {
+    "key": "",
+    "ticketType": "",
+    "customerEntityType": "",
+    "departmentName": "",
+    "deliveryFeeCalculation": "",
+    "promotionDiscount": "",
+    "tipCalculation": ""
+  },
+  "webhook": {
+    "token": "",
+    "subdomain": "",
+    "port": ""
+  },
+  "deliverect": {
+    "paymentType": "",
+    "ticketType": "",
+    "departmentName": "",
+    "orderTagName": "",
+    "whiteList": {}
+  },
+  "server": {
+    "port": "",
+    "hostname": "",
+    "user": "",
+    "password": ""
+  },
+  "sql": {
+    "hostname": "",
+    "user": "",
+    "password": "",
+    "databaseName": "",
+    "port": ""
+  },
+  "clover": {
+    "merchantId": "",
+    "key": "",
+    "paymentType": ""
+  },
+  "email": {
+    "email": "",
+    "password": ""
+  },
+  "openTime": {
+    "0": {
+      "isOpen": false,
+      "from": "",
+      "to": ""
+    },
+    "1": {
+      "isOpen": false,
+      "from": "",
+      "to": ""
+    },
+    "2": {
+      "isOpen": false,
+      "from": "",
+      "to": ""
+    },
+    "3": {
+      "isOpen": false,
+      "from": "",
+      "to": ""
+    },
+    "4": {
+      "isOpen": false,
+      "from": "",
+      "to": ""
+    },
+    "5": {
+      "isOpen": false,
+      "from": "",
+      "to": ""
+    },
+    "6": {
+      "isOpen": false,
+      "from": "",
+      "to": ""
+    }
+  }
+}

@@ -1,10 +1,14 @@
 var config = module.exports = {write};
 const fs = require('fs');
-const configJSON = require('./config.json');
-
 load();
 
 function load(){
+    let configExists = fs.existsSync('./config.json');
+    var configJSON;
+    if(configExists)
+        configJSON = require('./config.json');
+    else
+        configJSON = require('./config_base.json');
     for(let i in configJSON){
         config[i] = configJSON[i];
     }
