@@ -2,12 +2,13 @@
 
 
 
-module.exports = {isOpen, gql, updateGlobalSetting, getGlobalSetting, broadcast, openTerminal, closeTerminal, loadTicket, executeTicketAutomationCommand, payTicket, closeTicket, loadCustomer, loadItems, createTicket }; //Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket, getCheckHoldOrders};
+module.exports = {isOpen, gql, isStopped, updateGlobalSetting, getGlobalSetting, broadcast, openTerminal, closeTerminal, loadTicket, executeTicketAutomationCommand, payTicket, closeTicket, loadCustomer, loadItems, createTicket }; //Authorize, gql, getCloverLastRead, setCloverLastRead, getDeliverectLastRead, setDeliverectLastRead, getOpenTakeoutTickets,getOpenDeliveryTickets,openTerminal,closeTerminal,payTicket, closeTicket,loadCustomer,loadItems,createTicket, getCheckHoldOrders};
 
 const request = require('request');
 const querystring = require('querystring');
 const fs = require('fs');
 const config = require('./config/config').samba;
+const openTimes = require('./config/config').openTime;
 
 const log = require('./app');
 
@@ -18,26 +19,34 @@ const serverKey = config.key;
 const userName = config.username;
 const password = config.password;
 const deliverectOrderTagName = process.env.DELIVERECT_ORDER_TAG_NAME;
-const terminalName = 'Server';
-const miscProductName = 'Misc';
+const terminalName = config.terminalName;
+const miscProductName = config.miscProductName;
 
 var accessToken = undefined;
 var accessTokenExpires = '';
 
-const openTime = "10:30";
-const closeTime = "22:00";
+var isStopped = false;
 
-//will check if store is open.
-//TODO:make a page that can edit the open times for each weekday so hours are not hard-coded.
+//TODO:integrate config weekday open times
 function isOpen(){
-    var date = new Date();
-    var open = getTime(openTime);
-    var close = getTime(closeTime);
-    if(date.getDay() != 1 && date > open && date < close)
-        return true;
-    return false;
+    let  date = new Date();
+    let {isOpen, from, to} = openTimes[date.getDay()];
+    if(!isOpen) return false;
+    let openTime = getTime(from);
+    openTime.setHours(openTime.getHours() - 1);
+    let closeTime = getTime(to);
+    closeTime.setHours(closeTime.getHours() + 1);
+    if(openTime < closeTime){
+        if(openTime <= date && date <= closeTime){
+            return true;
+        }else return false;
+    } else{
+        if(date < openTime){
+            if(date <= closeTime) return true;
+            else return false;
+        } else return false;
+    }
 }
-//get time according to input time.
 //TODO: this will change once open time editing page is created.
 function getTime(time){
     time = time.split(":");

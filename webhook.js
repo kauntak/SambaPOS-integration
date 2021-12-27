@@ -14,7 +14,16 @@ const ngrok_options = {
 	authtoken: process.env.AUTH_TOKEN
 };
 //start();
-
+process.on("message", msg => {
+    switch(msg){
+        case "start":
+            start();
+            break;
+        case "stop":
+            stop();
+            break;
+    }
+});
 //writing to log for ngrok web server
 function writeToLog(content){
     log.write("Webhook", content);

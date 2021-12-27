@@ -38,13 +38,12 @@ function writeToErrorLog(content){
 	log.write("Gloria_Error", content);
 }
 
-//start();
-let isStopped = false;
+var isStopped = false;
 //starting GloriaFood integration app. will run an infinite loop, running the "loopGloria" function
 async function start(){
     isStopped = false;
     writeToLog("Gloria Started.");
-    while(isStopped){
+    while(!isStopped){
         if(samba.isOpen()){
             try{await loopGloria();}
             catch(err){if(err) writeToErrorLog(err)}

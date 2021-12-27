@@ -34,8 +34,19 @@ function writeToLog(content){
 function writeToErrorLog(content){
 	log.write("Server_Error", content);
 }
-let server;
-let isStopped = false;
+var server;
+var isStopped = false;
+
+process.on("message", msg => {
+    switch(msg){
+        case "start":
+            start();
+            break;
+        case "stop":
+            stop();
+            break;
+    }
+});
 //start();
 //main function to start server.
 //paired with ngrok webhook server.
@@ -111,7 +122,10 @@ function start(){
 
 }
 function stop(){
-	server.close();
+    writeToLog("Stopping");
+	server.close(()=>{
+        writeToLog("Server stopped.");
+    });
 }
 
 /* depreciated code using http

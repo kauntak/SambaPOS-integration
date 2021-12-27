@@ -4,6 +4,7 @@ const Server = require('./Server');
 const Webhook = require('./Webhook');
 const Clover = require('./Clover');
 const Gloria = require('./Gloria');
+const config = require('./config/config');
 const {performance} = require('perf_hooks');
 const fork = require('child_process').fork;
 const { app, BrowserWindow, ipcMain } = require('electron');
@@ -64,7 +65,7 @@ ipcMain.on('stopApp', () => {
 
 ipcMain.on('saveConfig', (event,data) => {
     console.log(data);
-    //config.write(data);
+    config.write(data);
 });
 
 
@@ -75,7 +76,7 @@ function write(source, content){
 	if(typeof content == "Object"){
 	 	content = JSON.stringify(content);
     }
-    
+    console.log(content);
     if(!fs.existsSync('./log'))
          fs.mkdir('./log', err=> {if(err) console.log(err)});
      fs.appendFile(`log/log_${source}.txt`, `${date}: ${content}\r\n`,(err) => {
@@ -121,7 +122,7 @@ async function start(){
     //Webhook.start(isTest);
     //Gloria.start(isTest);
     //Clover.start(isTest);
-    const Server = fork('./Server');
+    //const Server = fork('./Server');
     // const Webhook = fork('./Webhook');
     // const Clover = fork('./Clover');
     // const Gloria = fork('./Gloria');
