@@ -1,8 +1,8 @@
 // const fs = require('fs');
 //const fork = require('child_process').fork;
 
-document.getElementById("addRowButton").addEventListener("click", addRow);
-document.getElementById("startButton").addEventListener("click", toggleStart);
+let addRowButton;
+let startButton;
 window.Server.start();
 window.Server.stop();
 
@@ -129,8 +129,12 @@ function load(){
         document.getElementById("main").innerHTML += `
             ${createDivButtons(config)}
             ${createDiv(config)}`;
-        
+        addRowButton = document.getElementById("addRowButton");
+        addRowButton.addEventListener("click", addRow);
+        startButton = document.getElementById("startButton");
+        startButton.addEventListener("click", toggleStart);
         return;
+
     })
     .catch(err => alert(err));
 }
@@ -221,11 +225,14 @@ function saveData(){
         if(k == undefined){
             config[i][j] = elements[index].value || "";
         } else {
-            if(!config[i][j])
-            config[i][j] = {};
+            if(!config[i][j]){
+                if(i == "openTime")
+                    config[i][j] = {};
+                else config[i][j] = [];
+            }
             if(i != "openTime"){
                 if(elements[index].value != '')
-                    config[i][j][k] = elements[index].value;
+                    config[i][j].push(elements[index].value);
             } else{
                 
                 if(k=="isOpen"){
