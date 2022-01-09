@@ -3,7 +3,7 @@ const fs = require('fs');
 load();
 
 function load(){
-    let configExists = fs.existsSync('./config.json');
+    let configExists = fs.existsSync(__dirname + '/config.json');
     var configJSON;
     if(configExists)
         configJSON = require('./config.json');
