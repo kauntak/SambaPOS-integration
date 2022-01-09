@@ -9,7 +9,6 @@ const {performance} = require('perf_hooks');
 const fork = require('child_process').fork;
 const { app, BrowserWindow, ipcMain } = require('electron');
 
-
 const path = require('path');
 const fs = require('fs');
 
@@ -50,9 +49,9 @@ app.on('window-all-closed', () => {
 
 ipcMain.on('startApp', () => {
     Server.start();
-    // Webhook.start();
-    // Clover.start();
-    // Gloria.start();
+    Webhook.start();
+    Clover.start();
+    Gloria.start();
 });
 
 
