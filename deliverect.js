@@ -79,8 +79,8 @@ async function start(testing){
 //after orders have been processed, the orders will be inserted into DeliverectOrders database
 async function processDeliverect(order, orderUID) {
 	writeToLog(JSON.stringify(order, undefined, 2));
-	if(order.status == 20 || order.status == 120){
-		if(idList.find(id => id == order["_id"])) 
+	if(order.status == 20 || order.status == 120 || order.status == 122){
+		if(idList.find(id => id == order["_id"]) || !order["_id"]) 
 			return;
 		idList.push(order["_id"]);
 		if(idList.length > 50)
@@ -117,7 +117,7 @@ async function processOrder(order) {
 //void ticket/orders from SambaPOS, update Kitchen Display Tasks to Show Cancelled
 async function cancelOrder(order){
 	let ticketData = await getTicketData(order.orderId);
-	if(!ticketData || ticketData.isCancelled) return;
+	//if(!ticketData || ticketData.isCancelled) return;
 	writeToLog(`Cancelling order ${order.orderId} Ticket:${ticketData.ticketId}`);
 	await updateDisplaysAsCancelled(ticketData);
 	await voidTicket(ticketData);
@@ -166,7 +166,7 @@ function createTicketData(order){
 		id:	order["_id"],
         name: order.customer.name,
 		channelDisplayId: order.channelOrderDisplayId,
-		time: new Date(order.pickupTime),
+		time: processTime(order.pickupTime),
 		note: order.note,
 		amount: order.payment.amount/(Math.pow(10, order.decimalDigits)),
 		decimalDigits: order.decimalDigits,
@@ -180,6 +180,14 @@ function createTicketData(order){
 //removed unwanted user input
 function processComment(comment, name){
     return comment.replace(/"/g, "'").replace(/\n/g, "  ").replace(/~/g, "-").replace(name, "").replace("[CONTACTLESS] ", "");
+}
+
+//rounds time to closest 5 minutes
+function processTime(time){
+	time = new Date(time);
+	time.setMinutes(time.getMinutes() - 2, time.getSeconds() - 30);
+	var coeff = 1000 * 60 * 5;//5minutes in milliseconds
+	return new Date(Math.round(time.getTime() / coeff) * coeff);
 }
 
 //will process items into a SambaPOS readable item.
@@ -243,16 +251,19 @@ async function updateDisplaysAsCancelled(data){
 		UPDATE Tasks
 		SET [Content] = CONCAT([CONTENT], CHAR(10), '<color red><bold><size 22>CANCELLED</size></bold></color>')`
 	//qry += `WHERE Identifier = '${data.ticketNumber}'`;
-	qry += `WHERE Name = '${data.ticketNumber}'`;
+	qry += `WHERE Name = '${data.ticketNumber}'
+			OR Identifier = '${data.ticketNumber}'`;
 	await sql.exec(qry);
 	qry = `
 		SELECT TaskTypes.Name as Name
 		FROM [SambaPOS5].[dbo].[Tasks]
 		JOIN TaskTypes on TaskTypeId = TaskTypes.Id
 		WHERE Tasks.Name = '${data.ticketNumber}'
+		OR Tasks.Identifier = '${data.ticketNumber}'
 		AND SubOf IS NULL
 		`;
 	let displays = await sql.query(qry);
+	await new Promise(r => setTimeout(r, 3000));
 	for(let i in displays){
 		let displayChar = displays[i].Name.charAt(0);
 		await samba.broadcast(`Order Sent ${displayChar}DS`);
@@ -287,7 +298,7 @@ function voidTicket(data){
 		RemainingAmount = 0,
 		TotalAmount = 0,
 		TotalAmountPreTax = 0,
-		TicketStates = REPLACE(TicketStates, value, REPLACE(value, '"S":'+S+'",', '"S":"Paid",')),
+		TicketStates = REPLACE(TicketStates, value, REPLACE(value, '"S":"'+S+'",', '"S":"Paid",')),
 		IsCompleted = 1
 	FROM Tickets
 	CROSS APPLY OPENJSON(TicketStates, '$') states
