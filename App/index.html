@@ -14,15 +14,16 @@
         window.api.send("toMain", "test");
         window.api.receive("writeToLog", data => {
             const logElement = document.getElementById("log");
-            logElement.innerHTML += `
-                <div>
+            const div = document.createElement("div");
+            div.innerHTML = `
                     <table>
                         <tr>
                             <td class="logheader">${data.date}<br/>${data.source}</td>
                             <td class="logcontent"><pre class="logcontent">${data.content}</pre></td>
                         </tr>
-                    </table>
-                </div>`;
+                    </table>`;
+            logElement.appendChild(div);
+            div.scrollIntoView();
             console.log(logElement.childNodes, logElement.firstChild);
             while(logElement.childNodes.length > 100){
                 logElement.removeChild(logElement.firstChild);
@@ -31,15 +32,16 @@
         });
         window.api.receive("writeToErrorLog", data => {
             const logElement = document.getElementById("errorlog");
-            logElement.innerHTML += `
-                <div>
+            const div = document.createElement("div");
+            div.innerHTML = `
                     <table>
                         <tr>
                             <td class="logheader">${data.date}<br/>${data.source}</td>
                             <td><pre class="errorlogcontent">${data.content}</pre></td>
                         </tr>
-                    </table>
-                </div>`;
+                    </table>`;
+            logElement.appendChild(div);
+            div.scrollIntoView();
         });
     </script>
 </head>
