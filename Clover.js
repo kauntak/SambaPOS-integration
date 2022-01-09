@@ -150,8 +150,8 @@ async function loopClover(){
 				let amount = round(tickets[i].remainingAmount + tickets[j].remainingAmount, 2);
 				let index = unpaid.findIndex(payment => amount == payment.data.amount);
 				if(index != -1){
-					let iIsPaid = await payTicket(tickets[i].id, amount, paymentType);
-					let jIsPaid = await payTicket(tickets[j].id, amount, paymentType);
+					let iIsPaid = await payTicket(tickets[i].id, tickets[i].remainingAmount, paymentType);
+					let jIsPaid = await payTicket(tickets[j].id, tickets[j].remainingAmount, paymentType);
 					paymentData[unpaid[i].index].paid = iIsPaid;
 					paymentData[unpaid[j].index].paid = jIsPaid;
 					tickets.splice(i, 0);
@@ -166,8 +166,8 @@ async function loopClover(){
 	}
     await setCloverLastRead();
     await insertIntoPaymentsDB();
-	paymentData = paymentData.filter(payment => payment.paid == false);
-	console.log(paymentData);
+	paymentData = paymentData.filter(payment => payment.paid === false);
+	writeToLog("Remainging Payments: " + JSON.stringify(paymentData));
 }
 //Load employees registered on the Clover system.
 function loadEmployees(){
