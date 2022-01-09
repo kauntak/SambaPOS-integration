@@ -134,8 +134,8 @@ async function loopClover(){
 				let amount = round(unpaid[i].data.amount + unpaid[j].data.amount, 2);
 				let index = tickets.findIndex(tk => amount == tk.remainingAmount);
 				if(index != -1){
-					let isPaidI = await payTicket(tickets[index].id, unpaid[i].data.amount, paymentType);
-					let isPaidJ = await payTicket(tickets[index].id, unpaid[j].data.amount, paymentType);
+					let isPaidI = await payTicket(tickets[index].id, tickets[i].remainingAmount, paymentType);
+					let isPaidJ = await payTicket(tickets[index].id, tickets[j].remainingAmount, paymentType);
 					paymentData[unpaid[i].index].paid = isPaidI;
 					paymentData[unpaid[j].index].paid = isPaidJ;
 					unpaid.splice(i, 0);
