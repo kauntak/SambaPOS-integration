@@ -172,7 +172,7 @@ async function loopClover(){
     await setCloverLastRead();
     await insertIntoPaymentsDB();
 	paymentData = paymentData.filter(payment => payment.paid == false);
-	console.log(paymentData);
+	writeToLog("Remainging Payments: " + JSON.stringify(paymentData));
 }
 //Load employees registered on the Clover system.
 function loadEmployees(){
