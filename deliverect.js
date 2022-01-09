@@ -90,8 +90,8 @@ function processDeliverect(req){
 //after orders have been processed, the orders will be inserted into DeliverectOrders database
 async function processOrder(order, orderUID) {
 	writeToLog(JSON.stringify(order, undefined, 2));
-	if(order.status == 20 || order.status == 120){
-		if(idList.find(id => id == order["_id"])) 
+	if(order.status == 20 || order.status == 120 || order.status == 122){
+		if(!order["_id"] || idList.find(id => id == order["_id"])) 
 			return;
 		idList.push(order["_id"]);
 		if(idList.length > 50)
@@ -297,6 +297,7 @@ async function updateDisplaysAsCancelled(data){
 		AND SubOf IS NULL
 		`;
 	let displays = await sql.query(qry);
+	await new Promise(r => setTimeout(r, 3000));
 	for(let i in displays){
 		let displayChar = displays[i].Name.charAt(0);
 		await samba.broadcast(`Order Sent ${displayChar}DS`);
