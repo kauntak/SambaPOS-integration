@@ -93,6 +93,7 @@ async function processDeliverect(order, orderUID) {
 	} else if(order.status == 100) {
 		cancelOrder(order);
 	} else if(order.status == 90) finalizeOrder(order);
+	setDeliverectLastRead();
 }
 
 //split ticket into Ticket Details, items, and customer, will create ticket, and return an object that can be inserted into DeliverectOrder database
@@ -417,4 +418,22 @@ function changeTicketPrice(data){
 function payTicket(data){
 	let amount = `(SELECT RemainingAmount FROM Tickets WHERE Id = ${data.ticketId})`
 	return sql.payTicket(data.ticketId, amount, paymentType);
+}
+
+function getDeliverectLastRead(delay){
+    return samba.getGlobalSetting("lastDeliverectCheck").then(res => {
+        let date = new Date(res);
+        if(delay)
+            date.setMinutes(date.getMinutes() - delay);
+        return date;
+    }).catch( err => writeToErrorLog(err) );
+}
+
+//Setting value for when Clover was last polled
+function setDeliverectLastRead(date){
+	if(!date)
+		date = new Date();
+    return samba.updateGlobalSetting("lastDeliverectCheck", date.toJSON())
+		.then(() => true)
+		.catch( err => writeToErrorLog(err) );
 }

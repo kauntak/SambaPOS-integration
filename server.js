@@ -90,7 +90,7 @@ function start(){
     });
 
     app.post("/deliverect", (req, res)=>{
-        writeToLog(req.headers);
+        writeToLog(JSON.stringify(req.headers, undefined, 2));
         if(whiteList.includes(req.headers['x-forwarded-for'])){
             let orderId = randomUUID();
             deliverect.processDeliverect(req.body, orderId);

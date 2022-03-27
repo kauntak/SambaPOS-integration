@@ -418,7 +418,7 @@ function getCurrentTotals(){
 //Pay ticket via SQL
 function payTicket(ticketId, amount, paymentType){
 	let qry = `
-	DECLARE @PAID_AMOUNT decimal(16, 2) = ${amount};
+DECLARE @PAID_AMOUNT decimal(16, 2) = ${amount};
 DECLARE @TICKET_ID int = ${ticketId};
 DECLARE @PAYMENT_TYPE varchar(30) = '${paymentType}';
 
@@ -428,6 +428,8 @@ DECLARE @TICKET_TAX_AMOUNT decimal(16,2);
 DECLARE @TICKET_DEPARTMENT_ID int;
 DECLARE @IS_FULLY_PAID bit;
 DECLARE @AMOUNT_BEFORE_TAX decimal(16,2);
+
+DECLARE @ENTITY_ID int;
 
 DECLARE @PAYMENT_TYPE_ID int;
 DECLARE @DOCUMENT_ID int;
@@ -447,24 +449,25 @@ SELECT @TICKET_NUMBER = TicketNumber,
         WHEN TotalAmountPreTax = TotalAmount THEN 0
         ELSE TotalAmount - TotalAmountPreTax
         END,
-    @AMOUNT_BEFORE_TAX = TotalAmountPreTax
+    @AMOUNT_BEFORE_TAX = TotalAmountPreTax,
+	@ENTITY_ID = EntityId
 FROM [SambaPOS5].[dbo].[Tickets]
-WHERE Id = @TICKET_ID;
+JOIN TicketEntities ON Tickets.Id = Ticket_Id
+WHERE Tickets.Id = @TICKET_ID;
 
 SELECT @PAYMENT_TYPE_ID = Id
 FROM [SambaPOS5].[dbo].[PaymentTypes]
 WHERE Name = @PAYMENT_TYPE;
 
-
 UPDATE [dbo].[Tickets]  SET 
 	  [LastUpdateTime] = CURRENT_TIMESTAMP
-	, [TicketVersion] = CURRENT_TIMESTAMP
+	, [TicketVersion] = CONVERT(DATETIME2(0), CURRENT_TIMESTAMP)
 	, [LastPaymentDate] = CURRENT_TIMESTAMP
 	, [IsClosed] = @IS_FULLY_PAID
 	, [RemainingAmount] = @REMAINING_AMOUNT
 	, [TicketStates] = CASE
         WHEN @IS_FULLY_PAID = 0  THEN [TicketStates]
-        ELSE REPLACE([TicketStates], '"Unpaid"', '"Paid"')
+        ELSE '[{"D":"\/Date(' + CAST(DATEDIFF(SECOND, '1970-01-01', GETUTCDATE()) as varchar)+ '-0700)\/","S":"Paid","SN":"Status","SV":""}]'
         END
 WHERE Id = @TICKET_ID;
 
@@ -689,6 +692,10 @@ VALUES (
      , 0
      , @TRANSACTION_ID
      , @DOCUMENT_ID
-)`;
+)
+
+UPDATE [dbo].[EntityStateValues]
+SET [EntityStates] = '[{"D":"\/Date(' + CAST(DATEDIFF(SECOND, '1970-01-01', GETUTCDATE()) as varchar)+ '-0700)\/","S":"Available","SN":"Status"}]'
+WHERE ([EntityId] = @ENTITY_ID)`;
 	return exec(qry);
 }

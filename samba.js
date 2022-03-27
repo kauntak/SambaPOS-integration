@@ -36,6 +36,7 @@ const closeTime = "22:00";
 //will check if store is open.
 //TODO:make a page that can edit the open times for each weekday so hours are not hard-coded.
 function isOpen(){
+	return true;
     var date = new Date();
     var open = getTime(openTime);
     var close = getTime(closeTime);
@@ -448,7 +449,7 @@ function GetOrderTags(order) {
 			return `{tagName:"Default", tag:"${x.group_name}:${x.name}", price:${x.price}, quantity:${x.quantity}}`;}));
         if (order.instructions && order.instructions !== '') {
 			order.instructions = order.instructions.replace(/\n/g, '  ');
-            options.push(`{tagName:"Default", tag:"Instructions: ${order.instructions}"}`);
+            options.push(`{tagName:"Default", tag:"Comment: ${order.instructions}"}`);
         }
         var result = options.join();
         return `tags:[${result}],`

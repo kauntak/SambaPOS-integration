@@ -1,15 +1,15 @@
 //Integration for Gloria Foods. Will create ticket in SambaPOS for Orders placed on Gloria Foods.
 //TODO: Currently Polling, will change to Push
 
-module.exports = {start};
+ module.exports = {start};
 
-const express = require('express');
-const request = require('request');
-const querystring = require('querystring');
-const samba = require('./Samba');
-const log = require('./log');
-const dotenv = require('dotenv');
-dotenv.config();
+ const express = require('express');
+ const request = require('request');
+ const querystring = require('querystring');
+ const samba = require('./Samba');
+ const log = require('./log');
+ const dotenv = require('dotenv');
+ dotenv.config();
 
 const gloriaFoodKey = process.env.GLORIAFOOD_KEY;
 const ticketType =  process.env.GLORIAFOOD_TICKET_TYPE;
@@ -25,7 +25,7 @@ const closedTimeout =  30 * 60000;
 var createTicketQry = "";
 
 var isTest = false;
-var testBody = `{"count":0,"orders":[]}`;
+var testBody = ``;
 
 var lastBody;
 var lastQryCompleted = true;
@@ -36,7 +36,7 @@ function writeToLog(content){
 }
 //write to log for Gloria errors
 function writeToErrorLog(content){
-	log.write("Gloria_Error", content);
+	log.write("Gloria_Error", content);	
 }
 
 start();
@@ -175,10 +175,11 @@ function getCalculationName(name) {
     if (name === 'delivery_fee') return deliveryFeeCalculation;
     return undefined;
 }
-
 //process phone number
 function processPhone(phone){
-    return phone.match(/^\+?(\d{11})/)[1];
+	let match = phone.match(/^[\+]?1?[-\s\.]?[(]?([0-9]{3})[)]?[-\s\.]?([0-9]{3})[-\s\.]?([0-9]{4,6})$/);
+	let number = match? `${match[1]}${match[2]}${match[3]}` : "";
+	return number;
 }
 
 //will process items into a SambaPOS readable item.
@@ -265,7 +266,7 @@ function GetOrderTags(order) {
 			return `{tagName:"Default",tag:"${x.group_name}:${x.name}",price:${x.price},quantity:${x.quantity}}`;});
         if (order.instructions && order.instructions !== '') {
 			order.instructions = order.instructions.replace(/\n/g, '  ');
-            options.push(`{tagName:"Default",tag:"Instructions: ${order.instructions}"}`);
+            options.push(`{tagName:"Default",tag:"Comment: ${order.instructions}"}`);
         }
 		if(order.sambaName === miscProductName)
 		{
