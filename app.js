@@ -34,5 +34,6 @@ async function start(){
     const Webhook = fork('./Webhook');
     const Clover = fork('./Clover');
     const Gloria = fork('./Gloria');
+    const GloriaDineIn = fork('./Gloria_dinein');
     //const Hold = fork('./HoldOrders');
 }

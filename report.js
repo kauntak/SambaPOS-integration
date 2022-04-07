@@ -4,7 +4,7 @@
 module.exports = {generateReport, processHoldOrderData, changeTaskToHTML};
 const sql = require('./sql');
 const samba = require('./Samba');
-const log = require('./log');
+const log = require('./app');
 
 const font = 'font-family: Arial, Helvetica, sans-serif;';
 
@@ -60,8 +60,8 @@ const style = `
             }
             div.scroll{
                 background-color:rgb(85,85,85);
-                color:whitesmoke;
-                margin: 5px, 5px;
+                color: whitesmoke;
+                margin: 5px, 5px;   
                 padding: 5px;
                 width: auto;
                 height: auto;

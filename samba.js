@@ -24,6 +24,7 @@ const serverKey = process.env.SERVER_KEY;
 const userName = process.env.USERNAME;
 const password = process.env.PASSWORD;
 const deliverectOrderTagName = process.env.DELIVERECT_ORDER_TAG_NAME;
+const tableEntityType = 'Tables'
 const terminalName = 'Server';
 const miscProductName = 'Misc';
 
@@ -342,8 +343,8 @@ function loadItems(items) {
 		});
 }
 //creating a SambaPOS ticket from customer, items, ticket note, fulfilment time, service fees, and ticekt type
-function createTicket(customer, items, instructions, pickupTime, services, type, departmentName) {
-    return gql(getAddTicketScript(items, customer, instructions, pickupTime, services, type, departmentName))
+function createTicket(customer, items, instructions, pickupTime, services, type, departmentName, table) {
+    return gql(getAddTicketScript(items, customer, instructions, pickupTime, services, type, departmentName, table))
 		.then( data => {
             var ticketId = data.addTicket.id;
             gql('mutation m {postTicketRefreshMessage(id:0){id}}');
@@ -475,7 +476,7 @@ function GetOrderPrice(order) {
 	return `price:${order.price},`;
 }
 //Building GQL script to add new tickets. Will take orders, customers, instructions, pickup time, service charges, and ticket type as arguments.
-function getAddTicketScript(orders, customer, instructions, pickupTime, services, type, departmentName) {
+function getAddTicketScript(orders, customer, instructions, pickupTime, services, type, departmentName, table) {
     var orderLines = orders.filter(x => x.groupCode != 'Temporary open hours!!!!').map(order => {
         return `{
             name:"${order.sambaName ? order.sambaName : order.name}",
@@ -489,8 +490,9 @@ function getAddTicketScript(orders, customer, instructions, pickupTime, services
         }`;
     });
 
-    var entityPart = customer
-        ? `entities:[{entityType:"${customer.type}",name:"${customer.name}"}],`:'';
+    var entityPart = `entities:[
+        ${customer? `{entityType:"${customer.type}",name:"${customer.name}"}${table?",":""}`:''}
+        ${table? `{entityType:"${tableEntityType}", name:"${table}"}]`:`]`}`;
     var calculationsPart = services
         ? `calculations:[${services.map(x => `{name:"${x.name}",amount:${x.amount}}`).join()}],`
         : '';
@@ -499,6 +501,7 @@ function getAddTicketScript(orders, customer, instructions, pickupTime, services
 	}
     var coeff = 1000 * 60 * 5;
     var pickupDate = new Date(Math.round(pickupTime.getTime() / coeff) * coeff);
+    // pickupDate = new Date();
 	var time = `${pickupTime.getHours()}:${pickupTime.getMinutes()<10?"0"+ pickupTime.getMinutes():pickupTime.getMinutes()}`;
 	
     return `
@@ -511,7 +514,7 @@ function getAddTicketScript(orders, customer, instructions, pickupTime, services
                 ${entityPart}
                 states:[
                     {stateName:"Status",state:"Unconfirmed"}
-					${pickupDate.getDate() != new Date().getDate() ?',{stateName:"Pickup Status",state:"Future"}':''}],
+					${pickupDate.getDate() != new Date().getDate() && table != undefined ?',{stateName:"Pickup Status",state:"Future"}':''}],
                 tags:[{tagName:"Pickup Date",tag:"${pickupDate.getMonth() + 1}/${pickupDate.getDate()}/${pickupDate.getFullYear()}"},{tagName:"Pickup Time", tag:"${time}"}],
                 ${calculationsPart}
                 orders:[${orderLines.join()}]
